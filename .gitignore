@@ -43,13 +43,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.txt
+# CI 봇 출력 (review_bot.mjs, qa_bot.mjs)
 qa_comment.txt
 review_comment.txt
 review_comments.json

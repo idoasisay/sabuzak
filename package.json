@@ -24,6 +24,7 @@
     "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "@google/genai": "^1.38.0",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@tailwindcss/postcss": "^4",
