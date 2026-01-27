@@ -1,0 +1,170 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+    branches: ["main"]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+  statuses: write
+
+jobs:
+  ci-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25.3.0"
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build Project
+        run: npm run build
+
+  ai-qa-scenario:
+    needs: ci-check
+    runs-on: ubuntu-latest
+    # QA: synchronize 제외 (재PR 시 실행 안 됨)
+    if: ${{ (github.event_name == 'pull_request' && github.event.action != 'synchronize') || (github.event_name == 'issue_comment' && github.event.issue.pull_request) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install google-genai
+
+      - name: Generate QA Test Scenarios
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            git diff origin/${{ github.base_ref }}...HEAD | python .github/scripts/qa_bot.py
+          else
+            git diff origin/main...HEAD | python .github/scripts/qa_bot.py
+          fi
+
+      - name: Comment QA Scenarios on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const postQAComment = require('./.github/scripts/post_qa_comment.js');
+            await postQAComment(github, context, core);
+
+  ai-code-review:
+    needs: ci-check
+    runs-on: ubuntu-latest
+    # Review: 모든 PR 이벤트 포함 (synchronize 포함, 재PR 시에도 실행)
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && github.event.issue.pull_request) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install google-genai
+
+      - name: Generate Code Review
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            git diff origin/${{ github.base_ref }}...HEAD | python .github/scripts/review_bot.py
+          else
+            git diff origin/main...HEAD | python .github/scripts/review_bot.py
+          fi
+
+      - name: Post Inline Code Review Comments
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const postInlineReview = require('./.github/scripts/post_inline_review.js');
+            await postInlineReview(github, context, core);
+
+  preview-deploy:
+    needs: ai-code-review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get PR number
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request?.number;
+            if (!prNumber) {
+              core.setFailed("PR 번호를 찾을 수 없습니다.");
+              return;
+            }
+            core.setOutput('number', prNumber);
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build Project Artifacts
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy Project to Vercel (Preview)
+        id: deploy
+        run: |
+          PREVIEW_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$PREVIEW_URL" >> $GITHUB_OUTPUT
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Comment Preview URL on PR
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+        with:
+          script: |
+            const prNumber = process.env.PR_NUMBER;
+            const previewUrl = process.env.PREVIEW_URL;
+            if (!prNumber || !previewUrl) return;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(prNumber),
+              body: `✅ **Vercel Preview 배포 완료!**\n\n🔗 [프리뷰 링크 바로가기](${previewUrl})`
+            });

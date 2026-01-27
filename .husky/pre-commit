@@ -1,0 +1,12 @@
+ALLOWED_EMAIL="ihannah@kakao.com"
+
+CURRENT_EMAIL=$(git config user.email)
+if [ "$CURRENT_EMAIL" != "$ALLOWED_EMAIL" ]; then
+  echo "🛑 [Emergency] 회사 계정으로 커밋하려고 합니다"
+  echo "   현재 설정된 이메일: $CURRENT_EMAIL"
+  echo "   허용된 이메일: $ALLOWED_EMAIL"
+  echo "👉 'git config user.email 네이메일' 명령어로 수정하고 다시 시도해."
+  exit 1
+fi
+
+npx lint-staged

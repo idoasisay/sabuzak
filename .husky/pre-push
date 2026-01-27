@@ -1,0 +1,16 @@
+#!/bin/sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# # 현재 푸시하려는 브랜치 이름 가져오기
+# current_branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
+
+# # 금지할 브랜치 리스트 (main)
+# protected_branch='^(main)$'
+
+# # 만약 현재 브랜치가 main이면 막아버리기
+# if [[ $current_branch =~ $protected_branch ]]; then
+#   echo "🛑 [STOP] 메인 브랜치($current_branch)에 직접 푸시할 수 없습니다"
+#   echo "👉 제발 브랜치를 따로 따서 작업하고 PR을 날려주세요."
+#   echo "   (git checkout -b feat/새기능)"
+#   exit 1
+# fi
