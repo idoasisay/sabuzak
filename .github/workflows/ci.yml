@@ -45,23 +45,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.11"
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
-        run: |
-          pip install google-genai
+        run: npm ci
 
       - name: Generate QA Test Scenarios
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            git diff origin/${{ github.base_ref }}...HEAD | python .github/scripts/qa_bot.py
+            git diff origin/${{ github.base_ref }}...HEAD | node .github/scripts/qa_bot.mjs
           else
-            git diff origin/main...HEAD | python .github/scripts/qa_bot.py
+            git diff origin/main...HEAD | node .github/scripts/qa_bot.mjs
           fi
 
       - name: Comment QA Scenarios on PR
@@ -82,23 +82,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.11"
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
-        run: |
-          pip install google-genai
+        run: npm ci
 
       - name: Generate Code Review
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            git diff origin/${{ github.base_ref }}...HEAD | python .github/scripts/review_bot.py
+            git diff origin/${{ github.base_ref }}...HEAD | node .github/scripts/review_bot.mjs
           else
-            git diff origin/main...HEAD | python .github/scripts/review_bot.py
+            git diff origin/main...HEAD | node .github/scripts/review_bot.mjs
           fi
 
       - name: Post Inline Code Review Comments

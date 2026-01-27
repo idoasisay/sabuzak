@@ -34,7 +34,30 @@ def count_changed_files(diff: str) -> int:
         files.add(match.group(1))
     return len(files)
 
-def create_prompt(pr_diff: str) -> tuple[str, str]:
+def get_project_stack() -> str:
+    """package.json에서 주요 의존성 버전을 읽어 프로젝트 스택 설명 문자열 반환"""
+    pkg_paths = ["package.json", "../package.json"]
+    for pkg_path in pkg_paths:
+        try:
+            with open(pkg_path, encoding="utf-8") as f:
+                pkg = json.load(f)
+            deps = {**(pkg.get("dependencies") or {}), **(pkg.get("devDependencies") or {})}
+            # 주요 항목만 버전 포함해 나열 (^~ 제거해 핵심 버전만)
+            keys = ["next", "react", "react-dom", "typescript", "tailwindcss", "eslint"]
+            parts = []
+            for k in keys:
+                v = deps.get(k)
+                if v:
+                    clean = re.sub(r"^[\^~]?", "", str(v).split("-")[0])
+                    parts.append(f"{k} {clean}")
+            if parts:
+                return ", ".join(parts)
+            return ""
+        except (OSError, json.JSONDecodeError, KeyError):
+            continue
+    return ""
+
+def create_prompt(pr_diff: str, project_stack: str = "") -> tuple[str, str]:
     """시스템 프롬프트와 사용자 프롬프트 생성"""
     system_prompt = """당신은 10년 이상의 경력을 가진 시니어 코드 리뷰어입니다. Pull Request의 코드 변경사항을 깊이 있게 분석하여 실용적이고 구체적인 리뷰를 작성합니다.
 
@@ -75,10 +98,20 @@ def create_prompt(pr_diff: str) -> tuple[str, str]:
    - 코딩 컨벤션, 스타일 가이드 준수
    - 문서화 부족 (복잡한 로직)
 
-**Severity 기준:**
-- **critical**: 즉시 수정 필요 (버그, 보안 취약점, 데이터 손실 가능성)
-- **suggestion**: 개선 권장 (성능, 가독성, 유지보수성)
+**프로젝트 버전 기준 (필수):**
+- 리뷰·제안은 반드시 이 프로젝트가 쓰는 버전의 최신 문서와 API 기준으로 할 것.
+- 예: Next.js 16 사용 시 Next.js 15 문법/예제를 권하지 말고, Next.js 16 공식 문서·채택된 패턴만 제안할 것.
+- React, TypeScript 등도 diff 또는 아래 "프로젝트 스택"에 적힌 버전 기준으로만 언급할 것.
+- 구버전 패턴이나 "Next 15에서는 …" 같은 권장은 하지 말 것.
+
+**Severity 기준 (엄격히 적용):**
+- **critical**: 즉시 수정 필요—실제 버그, 확인된 보안 취약점, 데이터 손실·시스템 오류 가능성이 명확할 때만 사용. 애매하면 suggestion으로 내리세요.
+- **suggestion**: 개선 권장 (성능, 가독성, 유지보수성, 잠재적 이슈)
 - **nitpick**: 사소한 개선 (스타일, 네이밍, 주석)
+
+**Severity 사용 규칙:**
+- critical이 진짜 없으면 comments에 critical 한 건도 넣지 말 것.
+- “혹시 모르니까” 하는 식의 과잉 경고는 suggestion으로 분류할 것.
 
 **응답 형식 (반드시 JSON으로 응답, 마크다운 코드블록 없이):**
 {
@@ -98,21 +131,25 @@ def create_prompt(pr_diff: str) -> tuple[str, str]:
 - 라인 번호는 diff에서 보이는 실제 라인 번호 사용
 - 각 코멘트는 구체적이고 실행 가능한 제안 포함
 - 중요하지 않은 스타일 이슈는 nitpick으로 분류
-- Critical 이슈는 반드시 포함 (있는 경우)
+- Critical은 실제로 있을 때만 사용 (없으면 0개가 정상)
 - 과도한 코멘트 지양 (중요한 것에 집중)
 - 응답은 반드시 유효한 JSON 형식 (마크다운 코드블록 없이)
 - **모든 내용은 반드시 한국어로 작성**"""
 
-    user_prompt = f"""다음 Pull Request의 코드 변경사항을 상세히 분석하고 리뷰해주세요.
+    stack_section = ""
+    if project_stack:
+        stack_section = f"\n**프로젝트 스택 (위 버전 기준으로만 제안할 것):** {project_stack}\n\n"
 
-**코드 변경사항:**
+    user_prompt = f"""다음 Pull Request의 코드 변경사항을 상세히 분석하고 리뷰해주세요.
+{stack_section}**코드 변경사항:**
 {pr_diff}
 
 **리뷰 요청사항:**
-1. Critical 이슈가 있다면 반드시 우선적으로 지적
+1. 확실한 버그/보안/데이터 이슈가 있을 때만 critical로 지적 (의심 수준이면 suggestion)
 2. 각 코멘트는 구체적인 문제 설명과 개선 방안을 포함
 3. 코드의 맥락을 고려하여 실용적인 제안 제공
 4. 과도한 코멘트보다는 중요한 이슈에 집중
+5. 제안 시 반드시 프로젝트 스택에 적힌 버전(예: Next.js 16, React 19)의 최신 문서·패턴만 사용할 것. 구버전(Next 15 등) 기준 권장 금지.
 
 위 형식에 맞춰 JSON으로 코드 리뷰를 제공해주세요. 응답은 반드시 유효한 JSON 형식이어야 하며, 마크다운 코드블록 없이 순수 JSON만 반환해주세요."""
 
@@ -166,8 +203,9 @@ def main():
     files_count = count_changed_files(pr_diff)
 
     try:
+        project_stack = get_project_stack()
         client = genai.Client(api_key=api_key)
-        system_prompt, user_prompt = create_prompt(pr_diff)
+        system_prompt, user_prompt = create_prompt(pr_diff, project_stack)
         combined_prompt = f"{system_prompt}\n\n{user_prompt}"
         
         response = client.models.generate_content(
@@ -176,23 +214,6 @@ def main():
         )
         
         result_text = response.text if hasattr(response, 'text') else str(response)
-        
-        # API 사용량 정보 추출 (비용 계산용)
-        input_tokens = 0
-        output_tokens = 0
-        if hasattr(response, 'usage_metadata'):
-            usage = response.usage_metadata
-            input_tokens = getattr(usage, 'prompt_token_count', 0) or 0
-            output_tokens = getattr(usage, 'candidates_token_count', 0) or 0
-        elif hasattr(response, 'usage'):
-            usage = response.usage
-            input_tokens = getattr(usage, 'prompt_tokens', 0) or 0
-            output_tokens = getattr(usage, 'completion_tokens', 0) or 0
-        
-        # Gemini 3 Flash Preview 가격 계산
-        input_cost = (input_tokens / 1_000_000) * 0.075
-        output_cost = (output_tokens / 1_000_000) * 0.30
-        total_cost = input_cost + output_cost
         
         # JSON 파싱
         review_data = parse_json_response(result_text)
@@ -204,7 +225,7 @@ def main():
         
         # 요약 댓글 생성 (PR 댓글로 사용)
         summary_lines = []
-        summary_lines.append('🤖 AI 코드 리뷰')
+        summary_lines.append('[ AI 코드 리뷰 ]')
         summary_lines.append('')
         summary_lines.append(f'**요약:** {review_data.get("summary", "코드 리뷰 완료")}')
         summary_lines.append('')
@@ -214,9 +235,9 @@ def main():
         nitpick_count = sum(1 for c in comments if c.get('severity') == 'nitpick')
         
         summary_lines.append('**리뷰 통계**')
-        summary_lines.append(f'🚨 Critical: {critical_count}')
-        summary_lines.append(f'💡 Suggestion: {suggestion_count}')
-        summary_lines.append(f'✏️ Nitpick: {nitpick_count}')
+        summary_lines.append(f'[ 즉시 수정 필요 ]: {critical_count}')
+        summary_lines.append(f'[ 개선 권장 ]: {suggestion_count}')
+        summary_lines.append(f'[ 사소한 개선 ]: {nitpick_count}')
         
         # 상세 코멘트 보기 (접을 수 있는 섹션)
         if comments:
@@ -242,10 +263,10 @@ def main():
                     comment_text = comment.get('body', '')
                     
                     severity_emoji = {
-                        'critical': '🚨',
-                        'suggestion': '💡',
-                        'nitpick': '✏️'
-                    }.get(severity, '💡')
+                        'critical': '[ 즉시 수정 필요 ]',
+                        'suggestion': '[ 개선 권장 ]',
+                        'nitpick': '[ 사소한 개선 ]'
+                    }.get(severity, '[ 개선 권장 ]')
                     
                     summary_lines.append(f'**{severity_emoji} [{severity.upper()}]** 라인 {line_num}:')
                     summary_lines.append(f'{comment_text}')
@@ -254,20 +275,12 @@ def main():
             summary_lines.append('</details>')
         
         summary_lines.append('')
-        if input_tokens > 0 or output_tokens > 0:
-            cost_text = f'${total_cost:.4f}'
-            summary_lines.append(f'📈 분석 파일: {files_count}개 | 💰 API 비용: {cost_text} (입력: {input_tokens:,}, 출력: {output_tokens} tokens)')
-        else:
-            summary_lines.append(f'📈 분석 파일: {files_count}개 | 💰 API 비용: 계산 불가')
+        summary_lines.append(f'📈 분석 파일: {files_count}개')
         
         summary_text = '\n'.join(summary_lines)
         
         with open("review_comment.txt", "w", encoding="utf-8") as f:
             f.write(summary_text)
-        
-        print("✅ 코드 리뷰 생성 완료")
-        print(f"📁 변경된 파일 수: {files_count}")
-        print(f"💬 인라인 댓글 수: {len(comments)}개")
         
         client.close()
         
