@@ -31,12 +31,9 @@ if [ -z "$COMMITS_ONELINE" ]; then
   exit 0
 fi
 
-# 이미 PR 있는지 확인
+# 이미 PR 있는지 확인 (있어도 본문은 채움)
+EXISTING_NUM=$(gh pr list --head "$BRANCH" --base "$BASE" --json number -q '.[0].number' 2>/dev/null || true)
 EXISTING_URL=$(gh pr list --head "$BRANCH" --base "$BASE" --json url -q '.[0].url' 2>/dev/null || true)
-if [ -n "$EXISTING_URL" ]; then
-  echo "이미 PR이 있습니다: $EXISTING_URL"
-  exit 0
-fi
 
 # 3. PR 제목 생성 (커밋 공통 주제, 타입 prefix, 50자 이내)
 # 첫 커밋의 제목에서 타입(feat/fix/docs/refactor 등) 추출 또는 기본값 사용
@@ -110,13 +107,17 @@ ${COMMITS_SECTION}
 PRBODY
 )
 
-# 5. PR 생성
-# 본문에 이스케이프/따옴표 문제 없도록 임시 파일 사용
+# 5. PR 생성 또는 기존 PR 본문/제목 갱신
 BODY_FILE=$(mktemp)
 trap 'rm -f "$BODY_FILE"' EXIT
 printf '%s' "$BODY" > "$BODY_FILE"
 
 echo "PR 제목: $TITLE"
-gh pr create --base "$BASE" --title "$TITLE" --body-file "$BODY_FILE"
-PR_URL=$(gh pr list --head "$BRANCH" --base "$BASE" --json url -q '.[0].url')
-echo "생성된 PR: $PR_URL"
+if [ -n "$EXISTING_NUM" ]; then
+  gh pr edit "$EXISTING_NUM" --title "$TITLE" --body-file "$BODY_FILE"
+  echo "기존 PR 본문/제목 갱신: $EXISTING_URL"
+else
+  gh pr create --base "$BASE" --title "$TITLE" --body-file "$BODY_FILE"
+  PR_URL=$(gh pr list --head "$BRANCH" --base "$BASE" --json url -q '.[0].url')
+  echo "생성된 PR: $PR_URL"
+fi
