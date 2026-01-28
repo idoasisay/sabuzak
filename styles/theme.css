@@ -1,0 +1,9 @@
+/* theme 조각들 — @theme는 여러 파일에 나눠 써도 Tailwind가 합침.
+   타이포 커스텀할 때 theme/typography.css 채운 뒤 아래 주석 해제.
+   상세: docs/DESIGN_TOKENS.md
+*/
+@import "./theme/colors.css";
+@import "./theme/radius.css";
+@import "./theme/spacing.css";
+@import "./theme/breakpoints.css";
+@import "./theme/typography.css";

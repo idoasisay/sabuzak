@@ -1,0 +1,12 @@
+/* @theme: 뷰포트 브레이크포인트 — sm:, md:, lg:, xl:, 2xl: 접두어
+   바꾸려면 여기 값만 수정. 추가하려면 --breakpoint-이름: 값; 넣으면 "이름:" 접두어 생김.
+*/
+@theme {
+  --breakpoint-sm: 40rem; /* 640px */
+  --breakpoint-md: 48rem; /* 768px */
+  --breakpoint-lg: 64rem; /* 1024px */
+  --breakpoint-xl: 80rem; /* 1280px */
+  --breakpoint-2xl: 96rem; /* 1536px */
+
+  /* 추가 예: --breakpoint-xs: 30rem;  --breakpoint-3xl: 120rem; */
+}

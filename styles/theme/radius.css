@@ -1,0 +1,7 @@
+/* @theme: 둥글기 — tokens의 원시값 참조. rounded-sm / rounded-md / rounded-lg */
+@theme {
+  --radius: var(--radius-base);
+  --radius-sm: calc(var(--radius-base) - 4px);
+  --radius-md: calc(var(--radius-base) - 2px);
+  --radius-lg: var(--radius-base);
+}
