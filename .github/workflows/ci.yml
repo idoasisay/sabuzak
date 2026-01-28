@@ -106,7 +106,8 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = context.payload.pull_request?.number;
+            // pull_request 이벤트는 .pull_request, issue_comment 이벤트는 .issue (PR도 이슈 번호 사용)
+            const prNumber = context.payload.pull_request?.number ?? context.payload.issue?.number;
             if (!prNumber) {
               core.setFailed("PR 번호를 찾을 수 없습니다.");
               return;
