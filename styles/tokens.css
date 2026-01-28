@@ -1,0 +1,64 @@
+/* 토큰 원시값 — theme에서 var()로 참조.
+   - 색상: 라이트/다크 구분 때문에 :root + .dark
+   - 간격·둥글기 등: 모드 구분 없으면 :root에만
+*/
+
+/* 라이트 모드 색상 */
+:root {
+  --background: 0 0% 100%; /* #ffffff 흰색 */
+  --foreground: 222.2 84% 4.9%; /* #020617 거의 검정 */
+  --card: 0 0% 100%; /* #ffffff */
+  --card-foreground: 222.2 84% 4.9%; /* #020617 */
+  --popover: 0 0% 100%; /* #ffffff */
+  --popover-foreground: 222.2 84% 4.9%; /* #020617 */
+  --primary: 222.2 47.4% 11.2%; /* #1e293b 진한 슬레이트 */
+  --primary-foreground: 210 40% 98%; /* #f8fafc 흰쪽 회색 */
+  --secondary: 210 40% 96.1%; /* #f1f5f9 연한 회색 */
+  --secondary-foreground: 222.2 47.4% 11.2%; /* #1e293b */
+  --muted: 210 40% 96.1%; /* #f1f5f9 */
+  --muted-foreground: 215.4 16.3% 46.9%; /* #64748b 중간 회색 */
+  --accent: 210 40% 96.1%; /* #f1f5f9 */
+  --accent-foreground: 222.2 47.4% 11.2%; /* #1e293b */
+  --destructive: 0 84.2% 60.2%; /* #ef4444 빨강 */
+  --destructive-foreground: 210 40% 98%; /* #f8fafc */
+  --border: 214.3 31.8% 91.4%; /* #e2e8f0 연한 테두리 */
+  --input: 214.3 31.8% 91.4%; /* #e2e8f0 */
+  --ring: 222.2 84% 4.9%; /* #020617 포커스 링 */
+  --chart-1: 12 76% 61%; /* #f0734a 오렌지 */
+  --chart-2: 173 58% 39%; /* #0d9488 틸 */
+  --chart-3: 197 37% 24%; /* #1e3a4d 진한 블루 */
+  --chart-4: 43 74% 66%; /* #eab308 옐로우 */
+  --chart-5: 27 87% 67%; /* #f97316 오렌지 */
+
+  /* 공통 토큰 (모드 구분 없음) — theme에서 var(--spacing-base) 등으로 참조 */
+  --spacing-base: 0.25rem;
+  --radius-base: 0.5rem;
+}
+
+/* 다크 모드 색상 */
+.dark {
+  --background: 222.2 84% 4.9%; /* #020617 거의 검정 */
+  --foreground: 210 40% 98%; /* #f8fafc */
+  --card: 222.2 84% 4.9%; /* #020617 */
+  --card-foreground: 210 40% 98%; /* #f8fafc */
+  --popover: 222.2 84% 4.9%; /* #020617 */
+  --popover-foreground: 210 40% 98%; /* #f8fafc */
+  --primary: 210 40% 98%; /* #f8fafc (다크에선 주로 흰쪽) */
+  --primary-foreground: 222.2 47.4% 11.2%; /* #1e293b */
+  --secondary: 217.2 32.6% 17.5%; /* #1e293b 어두운 블루그레이 */
+  --secondary-foreground: 210 40% 98%; /* #f8fafc */
+  --muted: 217.2 32.6% 17.5%; /* #1e293b */
+  --muted-foreground: 215 20.2% 65.1%; /* #94a3b8 연한 그레이 */
+  --accent: 217.2 32.6% 17.5%; /* #1e293b */
+  --accent-foreground: 210 40% 98%; /* #f8fafc */
+  --destructive: 0 62.8% 30.6%; /* #b91c1c 어두운 빨강 */
+  --destructive-foreground: 210 40% 98%; /* #f8fafc */
+  --border: 217.2 32.6% 17.5%; /* #1e293b */
+  --input: 217.2 32.6% 17.5%; /* #1e293b */
+  --ring: 212.7 26.8% 83.9%; /* #cbd5e1 */
+  --chart-1: 220 70% 50%; /* #2563eb 블루 */
+  --chart-2: 160 60% 45%; /* #0d9488 틸 */
+  --chart-3: 30 80% 55%; /* #ea580c 오렌지 */
+  --chart-4: 280 65% 60%; /* #a855f7 퍼플 */
+  --chart-5: 340 75% 55%; /* #e11d48 핑크 */
+}

@@ -1,0 +1,4 @@
+/* @theme: 간격 — tokens의 원시값 참조. p-4, m-2, gap-6 = calc(var(--spacing) * 숫자) */
+@theme {
+  --spacing: var(--spacing-base);
+}

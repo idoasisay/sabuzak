@@ -1,0 +1,8 @@
+/* 공통 베이스 — 전역 보더, body 기본 스타일 */
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground font-sans;
+}

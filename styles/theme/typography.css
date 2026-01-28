@@ -1,0 +1,13 @@
+/* @theme: 타이포
+   - 고정: text-sm, text-lg 등 Tailwind 기본 그대로 사용
+   - 유동(fluid): 뷰포트에 따라 폰트가 부드럽게 줄었다 커짐 (clamp)
+   값 만들 때: https://utopia.fyi 에서 최소/최대 화면·최소/최대 크기 넣으면 clamp 식 뽑아줌
+*/
+@theme {
+  /* 유동 타이포 — clamp(최소, 선호값, 최대). 선호값에 vw 쓰면 창 크기에 비례 */
+  --text-fluid-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+  --text-fluid-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-fluid-lg: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
+  --text-fluid-xl: clamp(1.25rem, 1rem + 1vw, 2rem);
+  --text-fluid-2xl: clamp(1.5rem, 1.2rem + 1.5vw, 2.5rem);
+}
