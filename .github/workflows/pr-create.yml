@@ -1,0 +1,25 @@
+# 현재 브랜치 변경사항 분석 → PR 생성/본문 갱신 (Bash git/gh 만 사용)
+# main 아닌 브랜치에 push 했을 때만 실행
+name: PR Create
+
+on:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  pr-create:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create or update PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/pr_create.sh
