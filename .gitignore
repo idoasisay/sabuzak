@@ -43,7 +43,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# CI 봇 출력 (review_bot.mjs, qa_bot.mjs)
+# CI 봇 출력 (review_bot.mjs, qa_bot.mjs, pr_create.mjs)
+pr_body_temp.txt
 qa_comment.txt
 review_comment.txt
 review_comments.json

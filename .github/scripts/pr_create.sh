@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# 현재 브랜치의 변경사항을 분석하여 PR 생성 (allowed-tools: Bash(git:*), Bash(gh:*))
-# description: "현재 브랜치의 변경사항을 분석하여 상세한 PR을 생성합니다."
+# [Fallback] GEMINI_API_KEY 없을 때 또는 로컬에서 gh만으로 PR 생성/갱신
+# 워크플로 기본은 pr_create.mjs (Gemini가 제목·본문 생성 → gh로 올림).
+# 이 스크립트는 git/gh만으로 제목·본문을 만들어 같은 형식(Summary/Changes/Commits/Test Plan)으로 올림.
 
 set -e
 BASE=main
@@ -80,14 +81,14 @@ done
 [ -z "$CHANGES_SECTION" ] && CHANGES_SECTION="### 변경 파일"$'\n\n'"${DIFF_STAT}"$'\n\n'
 
 BODY=$(cat <<PRBODY
-## Summary
-
-\`\`\`
+---
 description: "현재 브랜치의 변경사항을 분석하여 PR 생성"
 allowed-tools: Bash(git:*), Bash(gh:*)
-\`\`\`
+---
 
 현재 브랜치의 모든 커밋을 분석하여 상세한 PR을 생성합니다.
+
+## Summary
 
 ${SUMMARY_BULLETS}
 
@@ -103,7 +104,6 @@ ${COMMITS_SECTION}
 - [ ] 린트/타입 검사 통과
 - [ ] 변경 범위에 맞는 수동 테스트
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 PRBODY
 )
 
