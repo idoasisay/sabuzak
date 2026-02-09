@@ -107,6 +107,12 @@ ${COMMITS_SECTION}
 PRBODY
 )
 
+# 브랜치가 issue-N 형태면 본문에 Fixes #N 추가 (이슈·프로젝트 연동)
+if [[ "$BRANCH" =~ ^issue-([0-9]+)(-|$) ]]; then
+  ISSUE_NUM="${BASH_REMATCH[1]}"
+  [[ "$BODY" != *"#${ISSUE_NUM}"* ]] && BODY="${BODY}"$'\n\n'"Fixes #${ISSUE_NUM}"
+fi
+
 # 5. PR 생성 또는 기존 PR 본문/제목 갱신
 BODY_FILE=$(mktemp)
 trap 'rm -f "$BODY_FILE"' EXIT
