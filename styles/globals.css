@@ -1,0 +1,69 @@
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./theme.css";
+@import "./base.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* 배경: PC 5쌍(양끝 고정 + 중앙 + 좌/우 각 1), 모바일 3쌍. 각 위치마다 2줄(간격 8px). */
+.bg-grid-center {
+  --grid-edge: 16px;
+  --grid-line: 1px;
+  --grid-pair-gap: 8px; /* 두 줄 사이 간격 */
+  --grid-pair-width: calc(var(--grid-line) + var(--grid-pair-gap) + var(--grid-line)); /* 10px */
+  --grid-line-color: hsl(var(--muted-foreground) / 0.15);
+  --inner-width: calc(100% - 2 * var(--grid-edge));
+  /* 2줄(1px + 8px + 1px) 한 쌍용 이미지: 12px 폭 */
+  --line-pair-img: linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 1px,
+    var(--grid-line-color) 1px,
+    var(--grid-line-color) 2px,
+    transparent 2px,
+    transparent calc(2px + var(--grid-pair-gap)),
+    var(--grid-line-color) calc(var(--grid-pair-width)),
+    var(--grid-line-color) calc(var(--grid-pair-width) + var(--grid-line)),
+    transparent calc(var(--grid-pair-width) + var(--grid-line)),
+    transparent 12px
+  );
+
+  background-color: hsl(var(--background));
+  /* 모바일: 3쌍 — 좌 20px, 중앙 50%, 우 20px (쌍 이미지 12px: 1+1+8+1+1) */
+  background-image: var(--line-pair-img), var(--line-pair-img), var(--line-pair-img);
+  background-size:
+    12px 100%,
+    12px 100%,
+    12px 100%;
+  /* 좌: 첫 줄이 --grid-edge(16px)에. 중앙: center. 우: 두 번째 줄이 100%-16px에 */
+  background-position:
+    calc(var(--grid-edge) - 1px) 0,
+    center 0,
+    calc(100% - var(--grid-edge) + 1px) 0;
+  background-repeat: no-repeat;
+}
+
+/* PC: 5쌍 — 좌 고정, 좌내부, 중앙, 우내부, 우 고정 (64rem = 1024px, 여기선 md: 못 쓰고 값만 씀) */
+@media (min-width: 64rem) {
+  .bg-grid-center {
+    --seg-pc: calc(var(--inner-width) / 4);
+    --pos-left-inner: calc(var(--grid-edge) + var(--seg-pc));
+    --pos-right-inner: calc(100% - var(--grid-edge) - var(--seg-pc));
+
+    background-image:
+      var(--line-pair-img), var(--line-pair-img), var(--line-pair-img), var(--line-pair-img), var(--line-pair-img);
+    background-size:
+      12px 100%,
+      12px 100%,
+      12px 100%,
+      12px 100%,
+      12px 100%;
+    /* 좌/우 고정: 첫 줄 16px, 두 번째 줄 100%-16px. 중앙은 center */
+    background-position:
+      calc(var(--grid-edge) - 1px) 0,
+      calc(var(--pos-left-inner) - 1px) 0,
+      center 0,
+      calc(var(--pos-right-inner) - 1px) 0,
+      calc(100% - var(--grid-edge) + 1px) 0;
+  }
+}
