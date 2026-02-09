@@ -83,8 +83,12 @@ npm start
 sabuzak/
 ├── app/                 # Next.js App Router (라우팅·레이아웃만)
 │   ├── layout.tsx       # 전역 레이아웃
-│   ├── page.tsx         # / 페이지 (필요 시 feature에서 컴포넌트 import)
-│   └── globals.css
+│   └── page.tsx         # / 페이지 (필요 시 feature에서 컴포넌트 import)
+├── styles/              # 전역 스타일 (토큰, 테마, globals)
+│   ├── globals.css      # Tailwind + 토큰/테마/베이스 진입점
+│   ├── tokens.css
+│   ├── theme.css
+│   └── base.css
 ├── features/            # 기능 단위 모듈 (Feature-based)
 │   ├── home/
 │   │   ├── index.tsx    # 외부에 노출할 것만 export
