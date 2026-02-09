@@ -210,6 +210,14 @@ ${diffSample}
     }
     title = String(parsed.title || "").slice(0, 80);
     body = String(parsed.body || "");
+
+    // 브랜치 이름이 issue-N 형태면 PR 본문에 Fixes #N 추가 (이슈·프로젝트 연동)
+    const issueMatch = branch.match(/^issue-(\d+)(?:-|$)/);
+    if (issueMatch) {
+      const issueNum = issueMatch[1];
+      const fixesLine = `\n\nFixes #${issueNum}`;
+      if (!body.includes(`#${issueNum}`)) body += fixesLine;
+    }
   } catch (e) {
     console.error("Error: Gemini PR 내용 생성 실패:", e.message);
     process.exit(1);
