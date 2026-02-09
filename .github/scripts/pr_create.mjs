@@ -47,7 +47,9 @@ async function main() {
     process.exit(0);
   }
 
-  const commitsFormatted = runOptional(`git log ${BASE_REF}..HEAD --format="- \`%h\` %s"`);
+  const commitsFormatted = runOptional(
+    "git log " + BASE_REF + "..HEAD --format='- `%h` %s'"
+  );
   const diffStat = runOptional(`git diff ${BASE_REF}...HEAD --stat`);
   const diffSample = runOptional(`git diff ${BASE_REF}...HEAD`).slice(0, 24000);
 
@@ -153,12 +155,59 @@ ${diffSample}
         .filter(Boolean)
         .join("") ??
       "";
-    const raw = text
+    let raw = text
       .trim()
       .replace(/^```(?:json)?\s*/i, "")
       .replace(/```\s*$/, "")
       .trim();
-    const parsed = JSON.parse(raw);
+
+    function fixControlCharsInStrings(s) {
+      let out = "";
+      let i = 0;
+      let inStr = false;
+      let escape = false;
+      while (i < s.length) {
+        const c = s[i];
+        if (escape) {
+          out += c;
+          escape = false;
+          i++;
+          continue;
+        }
+        if (c === "\\" && inStr) {
+          escape = true;
+          out += c;
+          i++;
+          continue;
+        }
+        if (c === '"') {
+          inStr = !inStr;
+          out += c;
+          i++;
+          continue;
+        }
+        if (inStr && (c === "\n" || c === "\r")) {
+          out += "\\n";
+          i++;
+          continue;
+        }
+        out += c;
+        i++;
+      }
+      return out;
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (parseErr) {
+      if (/control character in string literal/i.test(parseErr.message)) {
+        raw = fixControlCharsInStrings(raw);
+        parsed = JSON.parse(raw);
+      } else {
+        throw parseErr;
+      }
+    }
     title = String(parsed.title || "").slice(0, 80);
     body = String(parsed.body || "");
   } catch (e) {
