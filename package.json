@@ -11,9 +11,12 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "prepare": "husky",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "branch:issue": ".github/scripts/branch_from_issue.sh"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.95.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.563.0",
@@ -24,9 +27,9 @@
     "zustand": "^5.0.10"
   },
   "devDependencies": {
-    "@google/genai": "^1.38.0",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@google/genai": "^1.38.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -35,8 +38,8 @@
     "eslint-config-next": "16.1.5",
     "husky": "^9.1.7",
     "lint-staged": "^15.2.0",
+    "prettier": "^3.8.1",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "prettier": "^3.8.1"
+    "typescript": "^5"
   }
 }
