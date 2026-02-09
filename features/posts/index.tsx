@@ -1,1 +1,1 @@
-export { PostsView } from "./components/PostsView";
+export { PostsView } from "./PostsView";

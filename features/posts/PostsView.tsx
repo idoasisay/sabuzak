@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { PostsStoreProvider } from "../PostsStoreContext";
-import { PostsCounter } from "./PostsCounter";
+import { PostsStoreProvider } from "./PostsStoreContext";
+import { PostsCounter } from "./components/PostsCounter";
 
 export function PostsView() {
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="min-h-screen font-sans">
       <div className="mx-auto max-w-2xl px-4 py-12">
         <PostsStoreProvider>
           <h1 className="text-2xl font-semibold text-foreground">Posts</h1>
