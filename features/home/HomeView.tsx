@@ -1,13 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 
 export async function HomeView() {
-  // 1. 서버용 Supabase 클라이언트 생성
-  const supabase = createClient();
-
-  // 2. 데이터 가져오기 (아까 만든 categories 테이블)
-  const { data: categories, error } = await (await supabase).from("categories").select("*");
+  const supabase = await createClient();
+  const { data: categories, error } = await supabase.from("categories").select("*");
   // 에러 처리 (필수!)
   if (error) {
+    console.error("Failed to fetch categories:", error.message, error.details);
     return <div>에러가 발생했어요: {error.message}</div>;
   }
   return (
