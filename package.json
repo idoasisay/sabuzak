@@ -39,6 +39,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^15.2.0",
     "prettier": "^3.8.1",
+    "supabase": "^2.76.7",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
