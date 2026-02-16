@@ -13,5 +13,4 @@ export type { TagItem } from "./api/getTags";
 export { getPostsList, getPostBySlug, getPostsByCategorySlug } from "./api/getPosts";
 export type { Post, PostListItem } from "./api/getPosts";
 export { BlogWriteView } from "./BlogWriteView";
-export { savePost } from "./actions/savePost";
-export type { SavePostInput, SavePostResult } from "./actions/savePost";
+// savePost는 서버 전용 → 클라이언트는 @/features/blog/actions/savePost 직접 임포트

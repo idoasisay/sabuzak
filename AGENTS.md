@@ -96,7 +96,7 @@ export function Counter() { ... }
 
 ## 참고
 
-- **blog**: `getCategories`, `getTags`, `getPosts*`, `savePost`, 뷰/타입은 모두 `@/features/blog` 배럴로 노출. app·다른 feature는 내부 경로(`api/`, `actions/`) 직접 임포트하지 않기.
+- **blog**: `getCategories`, `getTags`, `getPosts*`, 뷰/타입은 `@/features/blog` 배럴로. `savePost`는 서버 전용이라 **클라이언트에서는** `@/features/blog/actions/savePost` 직접 임포트 (배럴 쓰면 next/headers 등이 클라이언트 번들에 섞여 빌드 에러).
 - **에디터**: Tiptap·PublishSidebar는 여러 기능에서 쓸 수 있는 공용이므로 `components/tiptap/`에 둠.
 
 ---

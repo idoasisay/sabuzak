@@ -48,7 +48,7 @@ export async function savePost(input: SavePostInput): Promise<SavePostResult> {
 
   const publishedAtValue = published
     ? publishedAt
-      ? new Date(published).toISOString()
+      ? new Date(publishedAt).toISOString()
       : new Date().toISOString()
     : null;
 

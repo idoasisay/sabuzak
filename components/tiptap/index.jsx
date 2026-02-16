@@ -15,7 +15,7 @@ import FontFamily from "@tiptap/extension-font-family";
 import { Upload } from "lucide-react";
 import { Toolbar } from "./Toolbar";
 import { PublishSidebar } from "./PublishSidebar";
-import { savePost } from "@/features/blog";
+import { savePost } from "@/features/blog/actions/savePost";
 
 /** @typedef {{ id: string; name: string; slug: string }} CategoryItem */
 /** @typedef {{ id: string; name: string; slug: string }} TagItem */
