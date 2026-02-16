@@ -26,7 +26,7 @@ sabuzak/
 │   └── write/              # 헤더 없는 페이지
 ├── features/               # 기능 단위 모듈
 │   ├── home/
-│   └── posts/
+│   └── blog/
 ├── components/             # 공용 UI
 │   ├── layout/             # Header, Footer
 │   └── ui/                 # 범용 컴포넌트
