@@ -67,6 +67,12 @@ function getProjectStack() {
 function createPrompt(prDiff, projectStack = "") {
   const systemPrompt = `당신은 10년 이상의 경력을 가진 시니어 코드 리뷰어입니다. Pull Request의 코드 변경사항을 깊이 있게 분석하여 실용적이고 구체적인 리뷰를 작성합니다.
 
+**정확도 우선 (최우선 원칙):**
+- 잘못된 제안 한 건이 정확한 제안 열 건보다 해로움. 확신 없으면 코멘트하지 말 것.
+- "이렇게 바꾸면 어떨까요", "보통은 … 권장" 같은 추측·일반론 금지. 해당 프로젝트 버전의 공식 문서/동작에 근거한 것만 제안할 것.
+- 프레임워크·라이브러리 API(타입, 시그니처, 비동기 여부 등) 관련 제안은 반드시 프로젝트 스택 버전의 공식 문서와 일치할 때만 작성. 기억에 의존한 구버전 정보로 제안하지 말 것.
+- 의심스러우면 해당 이슈는 건너뛰고 comments에 넣지 말 것. 코멘트 개수보다 정확한 코멘트가 중요함.
+
 **핵심 리뷰 포인트 (우선순위 순):**
 
 1. **Critical - 버그 및 잠재적 오류**
@@ -110,6 +116,12 @@ function createPrompt(prDiff, projectStack = "") {
 - React, TypeScript 등도 diff 또는 아래 "프로젝트 스택"에 적힌 버전 기준으로만 언급할 것.
 - 구버전 패턴이나 "Next 15에서는 …" 같은 권장은 하지 말 것.
 
+**프레임워크 API 사실 (이 프로젝트 버전 기준, 위배 시 잘못된 제안임):**
+- Next.js 15 이상(16 포함): App Router의 page.tsx/layout.tsx에서 params, searchParams는 **Promise** 타입입니다.
+  - 타입: searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  - 사용: 반드시 await searchParams 또는 use(searchParams). 동기 Record 타입으로 바꾸라고 제안하지 말 것.
+- Next.js 14 이하는 동기 객체였으나, 이 프로젝트는 Next 16이므로 해당 없음.
+
 **Severity 기준 (엄격히 적용):**
 - **critical**: 즉시 수정 필요—실제 버그, 확인된 보안 취약점, 데이터 손실·시스템 오류 가능성이 명확할 때만 사용. 애매하면 suggestion으로 내리세요.
 - **suggestion**: 개선 권장 (성능, 가독성, 유지보수성, 잠재적 이슈)
@@ -139,6 +151,7 @@ function createPrompt(prDiff, projectStack = "") {
 - 중요하지 않은 스타일 이슈는 nitpick으로 분류
 - Critical은 실제로 있을 때만 사용 (없으면 0개가 정상)
 - 과도한 코멘트 지양 (중요한 것에 집중)
+- **제안할 때: "이 코드가 프로젝트 스택 버전 기준으로 확실히 틀렸다/위험하다"고 말할 수 있을 때만 코멘트. 애매하면 생략.**
 - 응답은 반드시 유효한 JSON 형식 (마크다운 코드블록 없이)
 - **모든 내용은 반드시 한국어로 작성**`;
 
@@ -150,11 +163,12 @@ ${stackSection}**코드 변경사항:**
 ${prDiff}
 
 **리뷰 요청사항:**
-1. 확실한 버그/보안/데이터 이슈가 있을 때만 critical로 지적 (의심 수준이면 suggestion)
+1. 확실한 버그/보안/데이터 이슈가 있을 때만 critical로 지적 (의심 수준이면 suggestion, 더 의심스러우면 코멘트 생략)
 2. 각 코멘트는 구체적인 문제 설명과 개선 방안을 포함
 3. 코드의 맥락을 고려하여 실용적인 제안 제공
-4. 과도한 코멘트보다는 중요한 이슈에 집중
-5. 제안 시 반드시 프로젝트 스택에 적힌 버전(예: Next.js 16, React 19)의 최신 문서·패턴만 사용할 것. 구버전(Next 15 등) 기준 권장 금지.
+4. **정확도 우선: 확신 없는 제안은 쓰지 말 것. 코멘트 0개여도 괜찮음.**
+5. 제안 시 반드시 프로젝트 스택에 적힌 버전(예: Next.js 16, React 19)의 최신 문서·패턴만 사용할 것. 구버전 기준 권장 금지.
+6. Next.js 16 App Router: page의 params/searchParams는 Promise이므로, 동기 객체(Record)로 바꾸라는 제안을 하지 말 것.
 
 위 형식에 맞춰 JSON으로 코드 리뷰를 제공해주세요. 응답은 반드시 유효한 JSON 형식이어야 하며, 마크다운 코드블록 없이 순수 JSON만 반환해주세요.`;
 
@@ -216,6 +230,10 @@ async function main() {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: combined,
+      config: {
+        temperature: 0.2,
+        topP: 0.95,
+      },
     });
 
     const resultText = response?.text ?? String(response ?? "");
