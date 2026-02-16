@@ -1,6 +1,4 @@
-import { BlogWriteView } from "@/features/blog/BlogWriteView";
-import { getCategories } from "@/features/blog/api/getCategories";
-import { getTags } from "@/features/blog/api/getTags";
+import { BlogWriteView, getCategories, getTags } from "@/features/blog";
 
 export default async function BlogWritePage() {
   const [categories, tags] = await Promise.all([getCategories(), getTags()]);

@@ -12,3 +12,6 @@ export { getTags } from "./api/getTags";
 export type { TagItem } from "./api/getTags";
 export { getPostsList, getPostBySlug, getPostsByCategorySlug } from "./api/getPosts";
 export type { Post, PostListItem } from "./api/getPosts";
+export { BlogWriteView } from "./BlogWriteView";
+export { savePost } from "./actions/savePost";
+export type { SavePostInput, SavePostResult } from "./actions/savePost";

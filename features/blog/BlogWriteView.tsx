@@ -1,8 +1,7 @@
 "use client";
 
 import Tiptap from "@/components/Tiptap";
-import type { CategoryItem } from "@/features/blog/api/getCategories";
-import type { TagItem } from "@/features/blog/api/getTags";
+import type { CategoryItem, TagItem } from "@/features/blog";
 
 type BlogWriteViewProps = {
   categories: CategoryItem[];
