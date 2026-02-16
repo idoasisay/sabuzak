@@ -1,6 +1,15 @@
-import { BlogWriteView, getCategories, getTags } from "@/features/blog";
+import { BlogWriteView, getCategories, getTags, getPostForEdit } from "@/features/blog";
 
-export default async function BlogWritePage() {
-  const [categories, tags] = await Promise.all([getCategories(), getTags()]);
-  return <BlogWriteView categories={categories} tags={tags} />;
+type BlogWritePageProps = {
+  searchParams: Promise<{ slug?: string }>;
+};
+
+export default async function BlogWritePage({ searchParams }: BlogWritePageProps) {
+  const { slug } = await searchParams;
+  const [categories, tags, initialPost] = await Promise.all([
+    getCategories(),
+    getTags(),
+    slug ? getPostForEdit(slug) : Promise.resolve(null),
+  ]);
+  return <BlogWriteView categories={categories} tags={tags} initialPost={initialPost ?? undefined} />;
 }

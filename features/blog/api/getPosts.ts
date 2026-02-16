@@ -12,6 +12,14 @@ export type Post = PostListItem & {
   updated_at: string;
 };
 
+/** 편집 폼용: id, category_id, tag_ids 포함 */
+export type PostForEdit = Post & {
+  id: string;
+  category_id: string;
+  tag_ids: string[];
+  published_at: string | null;
+};
+
 export async function getPostsList(): Promise<PostListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -36,6 +44,23 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
 
   if (error || !data) return null;
   return data as Post;
+}
+
+/** 편집 페이지용: slug로 글 조회 (published 무관), category_id·tag_ids 포함 */
+export async function getPostForEdit(slug: string): Promise<PostForEdit | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select("id, slug, title, content, excerpt, created_at, updated_at, category_id, published_at, post_tags(tag_id)")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  const row = data as Record<string, unknown>;
+  const postTags = (row.post_tags as { tag_id: string }[] | null) ?? [];
+  const tag_ids = postTags.map(pt => pt.tag_id);
+  const { post_tags: _, ...post } = row;
+  return { ...post, tag_ids } as PostForEdit;
 }
 
 /**
