@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
  *   onClose: () => void;
  *   categories: CategoryItem[];
  *   tags: TagItem[];
+ *   initialCategoryId?: string;
+ *   initialTagIds?: string[];
+ *   initialPublishAt?: string | null;
  *   onSave: (payload: {
  *     categoryId: string;
  *     tagIds: string[];
@@ -24,11 +27,26 @@ import { Button } from "@/components/ui/button";
  *   isSaving?: boolean;
  * }} props
  */
-export function PublishSidebar({ open, onClose, categories, tags, onSave, isSaving = false }) {
-  const [categoryId, setCategoryId] = useState("");
-  const [selectedTagIds, setSelectedTagIds] = useState(new Set());
+export function PublishSidebar({
+  open,
+  onClose,
+  categories,
+  tags,
+  initialCategoryId = "",
+  initialTagIds = [],
+  initialPublishAt = null,
+  onSave,
+  isSaving = false,
+}) {
+  const [categoryId, setCategoryId] = useState(initialCategoryId);
+  const [selectedTagIds, setSelectedTagIds] = useState(() => new Set(initialTagIds));
   const [tagNamesToAdd, setTagNamesToAdd] = useState("");
   const [publishAt, setPublishAt] = useState(() => {
+    if (initialPublishAt) {
+      const d = new Date(initialPublishAt);
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().slice(0, 16);
+    }
     const d = new Date();
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
     return d.toISOString().slice(0, 16);

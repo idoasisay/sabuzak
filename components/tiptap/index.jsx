@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useSyncExternalStore } from "react";
+import { useState, useCallback, useSyncExternalStore, useEffect } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -19,12 +19,13 @@ import { savePost } from "@/features/blog/actions/savePost";
 
 /** @typedef {{ id: string; name: string; slug: string }} CategoryItem */
 /** @typedef {{ id: string; name: string; slug: string }} TagItem */
+/** @typedef {{ id: string; slug: string; title: string; content: string; category_id: string; tag_ids: string[]; published_at: string | null }} PostForEdit */
 
 /**
- * @param {{ categories?: CategoryItem[]; tags?: TagItem[] }} props
+ * @param {{ categories?: CategoryItem[]; tags?: TagItem[]; initialPost?: PostForEdit | null }} props
  */
-export default function TiptapEditor({ categories = [], tags = [] }) {
-  const [title, setTitle] = useState("");
+export default function TiptapEditor({ categories = [], tags = [], initialPost = null }) {
+  const [title, setTitle] = useState(initialPost?.title ?? "");
   const [publishSidebarOpen, setPublishSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const editor = useEditor({
@@ -40,7 +41,7 @@ export default function TiptapEditor({ categories = [], tags = [] }) {
       Color,
       FontFamily,
     ],
-    content: "<p>Hello World! 🌎</p>",
+    content: initialPost?.content ?? "<p>Hello World! 🌎</p>",
     immediatelyRender: false,
     editorProps: {
       attributes: {
@@ -48,6 +49,18 @@ export default function TiptapEditor({ categories = [], tags = [] }) {
       },
     },
   });
+
+  const initialPostId = initialPost?.id ?? null;
+  useEffect(() => {
+    if (initialPost) {
+      setTitle(initialPost.title);
+      if (editor) editor.commands.setContent(initialPost.content, false);
+    } else {
+      setTitle("");
+    }
+    // initialPost identity not in deps: only sync when switching to another post (id) or editor ready
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPostId, editor]);
 
   const editorVersion = useSyncExternalStore(
     useCallback(
@@ -91,15 +104,22 @@ export default function TiptapEditor({ categories = [], tags = [] }) {
         </button>
       </div>
       <Toolbar editor={editor} />
-      <div className="min-h-0 flex-1 overflow-y-auto cursor-text" onClick={() => editor?.commands.focus()}>
+      <div
+        className="min-h-0 flex-1 overflow-y-auto cursor-text outline-none [&_.tiptap-editor]:outline-none [&_.tiptap-editor]:ring-0 [&_.tiptap-editor]:shadow-none"
+        onClick={() => editor?.commands.focus()}
+      >
         <EditorContent editor={editor} />
       </div>
 
       <PublishSidebar
+        key={publishSidebarOpen ? (initialPost?.id ?? "new") : "closed"}
         open={publishSidebarOpen}
         onClose={() => setPublishSidebarOpen(false)}
         categories={categories}
         tags={tags}
+        initialCategoryId={initialPost?.category_id ?? ""}
+        initialTagIds={initialPost?.tag_ids ?? []}
+        initialPublishAt={initialPost?.published_at ?? null}
         isSaving={isSaving}
         onSave={async payload => {
           if (!editor) return;
@@ -107,6 +127,7 @@ export default function TiptapEditor({ categories = [], tags = [] }) {
           try {
             const result = await savePost({
               ...payload,
+              postId: initialPost?.id,
               title: title.trim() || "제목 없음",
               content: editor.getHTML(),
             });
