@@ -29,6 +29,7 @@
   --chart-3: 25 35% 25%; /* #3d3229 */
   --chart-4: 43 74% 66%; /* #eab308 */
   --chart-5: 27 87% 67%; /* #f97316 */
+  --hover-background: 0 0% 92.5%; /* #e9e9e9*/ /* hover 시 배경색 */
 
   /* 공통 토큰 (모드 구분 없음) — theme에서 var(--spacing-base) 등으로 참조 */
   --spacing-base: 0.25rem;
@@ -61,4 +62,5 @@
   --chart-3: 30 80% 55%; /* #ea580c */
   --chart-4: 280 65% 60%; /* #a855f7 */
   --chart-5: 340 75% 55%; /* #e11d48 */
+  --hover-background: 0 0% 17.5%; /* #2e2e2e */ /* hover 시 배경색 */
 }
