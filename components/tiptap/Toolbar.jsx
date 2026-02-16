@@ -27,7 +27,7 @@ import { btn, active, FONT_FAMILIES, COLOR_PRESETS } from "./constants";
 
 const SEP = <span className="mx-1 h-5 w-px bg-border" aria-hidden />;
 
-export function Toolbar({ editor, updateTrigger }) {
+export function Toolbar({ editor }) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [imageOpen, setImageOpen] = useState(false);
@@ -38,7 +38,6 @@ export function Toolbar({ editor, updateTrigger }) {
   const linkWrapRef = useRef(null);
   const imageWrapRef = useRef(null);
   const colorWrapRef = useRef(null);
-  void updateTrigger; /* re-render when selection/transaction changes */
 
   useEffect(() => {
     if (linkOpen && linkInputRef.current) linkInputRef.current.focus();

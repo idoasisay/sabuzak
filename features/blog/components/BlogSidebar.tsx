@@ -16,14 +16,12 @@ import {
 } from "lucide-react";
 import { iconButtonClass } from "../styles/uiClasses";
 import { cn } from "@/lib/utils";
-import type { CategoryItem } from "../api/getCategories";
+import type { CategoryWithPosts } from "../api/getCategories";
 import type { PostListItem } from "../api/getPosts";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const SIDEBAR_OPEN = 14; // rem
 const SIDEBAR_CLOSED = 3; // rem
-
-export type CategoryWithPosts = CategoryItem & { posts: PostListItem[] };
 
 type BlogSidebarProps = {
   categories?: CategoryWithPosts[];

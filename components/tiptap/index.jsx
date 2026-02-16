@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -25,7 +25,6 @@ import { savePost } from "@/features/blog/actions/savePost";
  */
 export default function TiptapEditor({ categories = [], tags = [] }) {
   const [title, setTitle] = useState("");
-  const [updateTrigger, setUpdateTrigger] = useState(0);
   const [publishSidebarOpen, setPublishSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const editor = useEditor({
@@ -50,16 +49,27 @@ export default function TiptapEditor({ categories = [], tags = [] }) {
     },
   });
 
-  useEffect(() => {
-    if (!editor) return;
-    const onUpdate = () => setUpdateTrigger(n => n + 1);
-    editor.on("selectionUpdate", onUpdate);
-    editor.on("transaction", onUpdate);
-    return () => {
-      editor.off("selectionUpdate", onUpdate);
-      editor.off("transaction", onUpdate);
-    };
-  }, [editor]);
+  const editorVersion = useSyncExternalStore(
+    useCallback(
+      onStoreChange => {
+        if (!editor) return () => {};
+        const fn = () => {
+          editor.storage.updateVersion = (editor.storage.updateVersion ?? 0) + 1;
+          onStoreChange();
+        };
+        editor.on("selectionUpdate", fn);
+        editor.on("transaction", fn);
+        return () => {
+          editor.off("selectionUpdate", fn);
+          editor.off("transaction", fn);
+        };
+      },
+      [editor]
+    ),
+    useCallback(() => editor?.storage?.updateVersion ?? 0, [editor]),
+    () => 0
+  );
+  void editorVersion;
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-background">
@@ -80,7 +90,7 @@ export default function TiptapEditor({ categories = [], tags = [] }) {
           발행
         </button>
       </div>
-      <Toolbar editor={editor} updateTrigger={updateTrigger} />
+      <Toolbar editor={editor} />
       <div className="min-h-0 flex-1 overflow-y-auto cursor-text" onClick={() => editor?.commands.focus()}>
         <EditorContent editor={editor} />
       </div>
@@ -106,7 +116,11 @@ export default function TiptapEditor({ categories = [], tags = [] }) {
                 window.alert("발행되었습니다.");
                 window.location.href = `/blog/${result.slug}`;
               }
+            } else {
+              window.alert(result.error || "저장에 실패했습니다. 다시 시도해 주세요.");
             }
+          } catch (err) {
+            window.alert(err?.message || "저장 중 오류가 발생했습니다. 다시 시도해 주세요.");
           } finally {
             setIsSaving(false);
           }
