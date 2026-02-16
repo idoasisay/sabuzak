@@ -67,3 +67,113 @@
       calc(100% - var(--grid-edge) + 1px) 0;
   }
 }
+
+/* TipTap 에디터: 편집 영역 + 본문 스타일 (내부 스크롤용 컨테이너 안에서 min-height 100%) */
+.tiptap-editor {
+  min-height: 100%;
+  padding: 0.75rem 1rem;
+  outline: none;
+}
+
+.tiptap-editor:focus {
+  outline: none;
+}
+
+.tiptap-editor p {
+  margin: 0.5em 0;
+}
+
+.tiptap-editor p:first-child {
+  margin-top: 0;
+}
+
+.tiptap-editor h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 1em 0 0.5em;
+}
+.tiptap-editor h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1em 0 0.5em;
+}
+.tiptap-editor h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0.75em 0 0.25em;
+}
+
+.tiptap-editor ul,
+.tiptap-editor ol {
+  padding-left: 1.5rem;
+  margin: 0.5em 0;
+}
+
+.tiptap-editor ul {
+  list-style-type: disc;
+}
+.tiptap-editor ol {
+  list-style-type: decimal;
+}
+
+.tiptap-editor blockquote {
+  border-left: 3px solid hsl(var(--border));
+  padding-left: 1rem;
+  margin: 0.75em 0;
+  color: hsl(var(--muted-foreground));
+}
+
+.tiptap-editor code {
+  font-size: 0.9em;
+  padding: 0.15em 0.35em;
+  border-radius: 0.25rem;
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.tiptap-editor pre {
+  padding: 1rem;
+  border-radius: 0.375rem;
+  background: hsl(var(--muted));
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+
+.tiptap-editor pre code {
+  padding: 0;
+  background: none;
+}
+
+/* Link, Underline, Highlight, Superscript, Image */
+.tiptap-editor a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tiptap-editor a:hover {
+  opacity: 0.9;
+}
+
+.tiptap-editor u {
+  text-decoration: underline;
+}
+
+.tiptap-editor mark {
+  background-color: hsl(48 96% 77% / 0.8); /* highlight yellow */
+  padding: 0.1em 0.2em;
+  border-radius: 0.2em;
+}
+
+.tiptap-editor sup {
+  vertical-align: super;
+  font-size: 0.75em;
+}
+
+.tiptap-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+  display: block;
+  margin: 0.5em 0;
+}

@@ -22,14 +22,16 @@ AI가 Sabuzak 프로젝트 작업 시 참조하는 구조 요약입니다. 상�
 ```
 sabuzak/
 ├── app/                    # 라우팅만 (UI 로직 금지)
-│   ├── (with-header)/      # 헤더 있는 페이지들
-│   └── write/              # 헤더 없는 페이지
+│   ├── (with-header)/      # 헤더 있는 페이지들 (홈, reviews, projects, admin)
+│   ├── blog/               # 블로그: layout, 목록, [slug] 글, write
+│   └── write/              # 헤더 없는 단순 write 페이지
 ├── features/               # 기능 단위 모듈
 │   ├── home/
-│   └── posts/
+│   └── blog/               # api/, actions/, components/, content/, styles/
 ├── components/             # 공용 UI
 │   ├── layout/             # Header, Footer
-│   └── ui/                 # 범용 컴포넌트
+│   ├── ui/                 # 범용 컴포넌트 (Button 등)
+│   └── tiptap/             # 에디터 (Toolbar, PublishSidebar, index)
 ├── stores/                 # 전역 Zustand 스토어
 ├── styles/                 # 디자인 토큰
 ├── hooks/                  # 전역 커스텀 훅
@@ -43,12 +45,15 @@ sabuzak/
 ### 임포트
 
 ```tsx
-// ✅ 경로 별칭
+// ✅ 경로 별칭 + feature는 배럴(index) 통해
 import { HomeView } from "@/features/home";
+import { BlogWriteView, getCategories, getTags } from "@/features/blog";
+import type { CategoryItem, TagItem } from "@/features/blog";
 import { useAppStore } from "@/stores";
 
 // ❌ 내부 경로 직접 임포트 금지
 import { HomeView } from "@/features/home/components/HomeView";
+import { getCategories } from "@/features/blog/api/getCategories";
 ```
 
 ### 컴포넌트
@@ -86,6 +91,13 @@ export function Counter() { ... }
 | 컴포넌트 내 로컬  | `useState`   | 해당 컴포넌트      |
 
 → 상세: [docs/STATE.md](./docs/STATE.md)
+
+---
+
+## 참고
+
+- **blog**: `getCategories`, `getTags`, `getPosts*`, 뷰/타입은 `@/features/blog` 배럴로. `savePost`는 서버 전용이라 **클라이언트에서는** `@/features/blog/actions/savePost` 직접 임포트 (배럴 쓰면 next/headers 등이 클라이언트 번들에 섞여 빌드 에러).
+- **에디터**: Tiptap·PublishSidebar는 여러 기능에서 쓸 수 있는 공용이므로 `components/tiptap/`에 둠.
 
 ---
 
