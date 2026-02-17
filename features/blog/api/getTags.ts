@@ -13,3 +13,11 @@ export async function getTags(): Promise<TagItem[]> {
   if (error) return [];
   return (data ?? []) as TagItem[];
 }
+
+export async function getTagBySlug(slug: string): Promise<TagItem | null> {
+  if (!slug?.trim()) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("tags").select("id, name, slug").eq("slug", slug.trim()).maybeSingle();
+  if (error || !data) return null;
+  return data as TagItem;
+}
