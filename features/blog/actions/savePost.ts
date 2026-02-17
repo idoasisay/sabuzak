@@ -27,7 +27,9 @@ function stripHtml(html: string): string {
 }
 
 export async function savePost(input: SavePostInput): Promise<SavePostResult> {
-  const { postId, title, content, excerpt, categoryId, tagIds, tagNamesToAdd = [], published, publishedAt } = input;
+  const { postId, title, content, excerpt, categoryId, published, publishedAt } = input;
+  const tagIds = (input.tagIds ?? []).filter((id): id is string => Boolean(id));
+  const tagNamesToAdd = (input.tagNamesToAdd ?? []).map(n => String(n).trim()).filter(n => n.length > 0);
 
   if (!title.trim()) return { ok: false, error: "제목을 입력해 주세요." };
   if (!categoryId) return { ok: false, error: "카테고리를 선택해 주세요." };
@@ -82,24 +84,40 @@ export async function savePost(input: SavePostInput): Promise<SavePostResult> {
   const allTagIds = [...tagIds];
 
   for (const name of tagNamesToAdd) {
-    const tagSlug = slugify(name) || `tag-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    const { data: existingTag } = await supabase.from("tags").select("id").eq("slug", tagSlug).maybeSingle();
+    const trimmed = name.trim();
+    if (!trimmed) continue;
+    let tagSlug = slugify(trimmed);
+    if (!tagSlug || tagSlug === "untitled") {
+      tagSlug = trimmed; // 한글 등: slug를 이름 그대로 사용 (고유·가독)
+    }
+    const { data: bySlug } = await supabase.from("tags").select("id").eq("slug", tagSlug).maybeSingle();
+    let existingTag = bySlug ?? null;
+    if (!existingTag) {
+      const { data: byName } = await supabase.from("tags").select("id").eq("name", trimmed).maybeSingle();
+      existingTag = byName ?? null;
+    }
     if (existingTag) {
       allTagIds.push(existingTag.id);
     } else {
       const { data: newTag, error: createErr } = await supabase
         .from("tags")
-        .insert({ name: name.trim(), slug: tagSlug })
+        .insert({ name: trimmed, slug: tagSlug })
         .select("id")
         .single();
-      if (!createErr && newTag) allTagIds.push(newTag.id);
+      if (createErr) return { ok: false, error: `태그 "${trimmed}" 추가 실패: ${createErr.message}` };
+      if (newTag) allTagIds.push(newTag.id);
     }
   }
 
-  await supabase.from("post_tags").delete().eq("post_id", finalPostId);
+  const { error: deleteErr } = await supabase.from("post_tags").delete().eq("post_id", finalPostId);
+  if (deleteErr) return { ok: false, error: `태그 연결 해제 실패: ${deleteErr.message}` };
+
   const uniqueTagIds = [...new Set(allTagIds)];
   if (uniqueTagIds.length > 0) {
-    await supabase.from("post_tags").insert(uniqueTagIds.map(tag_id => ({ post_id: finalPostId, tag_id })));
+    const { error: insertErr } = await supabase
+      .from("post_tags")
+      .insert(uniqueTagIds.map(tag_id => ({ post_id: finalPostId, tag_id })));
+    if (insertErr) return { ok: false, error: `태그 연결 실패: ${insertErr.message}` };
   }
 
   return { ok: true, postId: finalPostId, slug };
