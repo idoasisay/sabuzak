@@ -96,7 +96,9 @@ export function Counter() { ... }
 
 ## 참고
 
-- **blog**: `getCategories`, `getTags`, `getPosts*`, 뷰/타입은 `@/features/blog` 배럴로. `savePost`는 서버 전용이라 **클라이언트에서는** `@/features/blog/actions/savePost` 직접 임포트 (배럴 쓰면 next/headers 등이 클라이언트 번들에 섞여 빌드 에러).
+- **blog**: `getCategories`, `getTags`, `getTagBySlug`, `getPosts*`(목록/상세/카테고리/태그), 뷰·타입은 `@/features/blog` 배럴로. `savePost`는 서버 전용이라 **클라이언트에서는** `@/features/blog/actions/savePost` 직접 임포트 (배럴 쓰면 next/headers 등이 클라이언트 번들에 섞여 빌드 에러).
+- **blog URL**: `/blog`만 오면 미들웨어가 `/blog/info`로 리다이렉트. `?tag=`, `?category=` 있으면 리다이렉트 안 함 → `/blog`에서 BlogView가 태그/카테고리 필터 목록 표시. 글 상세는 `/blog/[slug]`, 글 쓰기/수정은 `/blog/write`.
+- **글 보기**: 본문은 `tiptap-editor` 클래스로 에디터와 동일 스타일 적용. 글 헤더에 태그 링크(`/blog?tag=slug`) 표시.
 - **에디터**: Tiptap·PublishSidebar는 여러 기능에서 쓸 수 있는 공용이므로 `components/tiptap/`에 둠.
 
 ---
