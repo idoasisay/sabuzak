@@ -112,7 +112,7 @@ export default function TiptapEditor({ categories = [], tags = [], initialPost =
       </div>
 
       <PublishSidebar
-        key={publishSidebarOpen ? (initialPost?.id ?? "new") : "closed"}
+        key={initialPost?.id ?? "new"}
         open={publishSidebarOpen}
         onClose={() => setPublishSidebarOpen(false)}
         categories={categories}

@@ -41,6 +41,8 @@ export function PublishSidebar({
   const [categoryId, setCategoryId] = useState(initialCategoryId);
   const [selectedTagIds, setSelectedTagIds] = useState(() => new Set(initialTagIds));
   const [tagNamesToAdd, setTagNamesToAdd] = useState("");
+
+  /** MEMO: 발행 시각 선택 UI */
   const [publishAt, setPublishAt] = useState(() => {
     if (initialPublishAt) {
       const d = new Date(initialPublishAt);
