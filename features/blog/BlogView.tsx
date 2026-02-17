@@ -1,26 +1,31 @@
 import { redirect } from "next/navigation";
 import { BlogCategoryView } from "./BlogCategoryView";
 import { getCategoryBySlug } from "./api/getCategories";
-import { getPostsByCategorySlug } from "./api/getPosts";
+import { getTagBySlug } from "./api/getTags";
+import { getPostsByCategorySlug, getPostsByTagSlug } from "./api/getPosts";
 import { INFO_SLUG } from "./constants";
 
 type BlogViewProps = {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; tag?: string }>;
 };
 
 export async function BlogView({ searchParams }: BlogViewProps) {
-  const { category: categorySlug } = await searchParams;
+  const { category: categorySlug, tag: tagSlug } = await searchParams;
 
-  // 카테고리 조회 & 글 목록 조회
-  const [category, posts] = await Promise.all([
-    getCategoryBySlug(categorySlug ?? ""),
-    getPostsByCategorySlug(categorySlug ?? ""),
-  ]);
-
-  // DB에 없을 때
-  if (!category) {
-    redirect(`/blog/${INFO_SLUG}`);
+  if (tagSlug) {
+    const [tag, posts] = await Promise.all([getTagBySlug(tagSlug), getPostsByTagSlug(tagSlug)]);
+    if (!tag) redirect(`/blog/${INFO_SLUG}`);
+    return <BlogCategoryView categoryName={`태그: ${tag.name}`} posts={posts} />;
   }
 
-  return <BlogCategoryView categoryName={category.name} posts={posts} />;
+  if (categorySlug) {
+    const [category, posts] = await Promise.all([
+      getCategoryBySlug(categorySlug),
+      getPostsByCategorySlug(categorySlug),
+    ]);
+    if (!category) redirect(`/blog/${INFO_SLUG}`);
+    return <BlogCategoryView categoryName={category.name} posts={posts} />;
+  }
+
+  redirect(`/blog/${INFO_SLUG}`);
 }
