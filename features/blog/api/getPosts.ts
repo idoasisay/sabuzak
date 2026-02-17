@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 export type PostListItem = {
   slug: string;
   title: string;
+  /** 목록 카드용 (카테고리/태그 뷰에서만 채워짐) */
+  excerpt?: string;
+  created_at?: string;
+  tags?: PostTag[];
 };
 
 /** 글 상세용 태그 (이름·slug로 링크용) */
@@ -25,6 +29,7 @@ export type PostForEdit = Post & {
   published_at: string | null;
 };
 
+// DESC: 목록 카드용: 목록 카드에 표시할 데이터만 조회 */
 export async function getPostsList(): Promise<PostListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -38,6 +43,7 @@ export async function getPostsList(): Promise<PostListItem[]> {
   return fromDb;
 }
 
+// DESC 상세 페이지용: 상세 페이지에 표시할 데이터만 조회 */
 export async function getPostBySlug(slug: string): Promise<Post | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -56,7 +62,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   return { ...post, tags } as Post;
 }
 
-/** 편집 페이지용: slug로 글 조회 (published 무관), category_id·tag_ids 포함 */
+// DESC 편집 페이지용: slug로 글 조회 (published 무관), category_id·tag_ids 포함 */
 export async function getPostForEdit(slug: string): Promise<PostForEdit | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -75,7 +81,7 @@ export async function getPostForEdit(slug: string): Promise<PostForEdit | null> 
 }
 
 /**
- * 카테고리 slug로 해당 카테고리 글 목록만 조회 (예: /blog?category=xxx).
+ * // DESC 카테고리 slug로 해당 카테고리 글 목록만 조회 (예: /blog?category=xxx).
  * ⚠️ posts.published = true 인 행만 반환합니다. (DB 기본값은 false)
  */
 export async function getPostsByCategorySlug(categorySlug: string): Promise<PostListItem[]> {
@@ -95,7 +101,7 @@ export async function getPostsByCategorySlug(categorySlug: string): Promise<Post
 
   const { data, error } = await supabase
     .from("posts")
-    .select("slug, title")
+    .select("slug, title, excerpt, created_at, post_tags(tag_id, tags(id, name, slug))")
     .eq("published", true)
     .eq("category_id", category.id)
     .order("created_at", { ascending: false });
@@ -107,7 +113,14 @@ export async function getPostsByCategorySlug(categorySlug: string): Promise<Post
     return [];
   }
 
-  const list = (data ?? []) as PostListItem[];
+  const rows = (data ?? []) as Record<string, unknown>[];
+  const list: PostListItem[] = rows.map(row => {
+    const postTags = (row.post_tags as { tag_id: string; tags: PostTag | null }[] | null) ?? [];
+    const tags = postTags.map(pt => pt.tags).filter((t): t is PostTag => t != null);
+    const { post_tags: _drop, ...post } = row;
+    void _drop;
+    return { ...post, tags } as PostListItem;
+  });
   if (process.env.NODE_ENV === "development" && list.length === 0) {
     console.warn(
       "[getPostsByCategorySlug] 0 posts for category:",
@@ -121,7 +134,7 @@ export async function getPostsByCategorySlug(categorySlug: string): Promise<Post
 }
 
 /**
- * 태그 slug로 해당 태그가 붙은 글 목록만 조회 (예: /blog?tag=xxx).
+ * // DESC 태그 slug로 해당 태그가 붙은 글 목록만 조회 (예: /blog?tag=xxx).
  * ⚠️ posts.published = true 인 행만 반환합니다.
  */
 export async function getPostsByTagSlug(tagSlug: string): Promise<PostListItem[]> {
@@ -141,11 +154,18 @@ export async function getPostsByTagSlug(tagSlug: string): Promise<PostListItem[]
   const postIds = postTags.map(pt => pt.post_id);
   const { data: posts, error } = await supabase
     .from("posts")
-    .select("slug, title")
+    .select("slug, title, excerpt, created_at, post_tags(tag_id, tags(id, name, slug))")
     .eq("published", true)
     .in("id", postIds)
     .order("created_at", { ascending: false });
 
   if (error) return [];
-  return (posts ?? []) as PostListItem[];
+  const rows = (posts ?? []) as Record<string, unknown>[];
+  return rows.map(row => {
+    const postTagsRow = (row.post_tags as { tag_id: string; tags: PostTag | null }[] | null) ?? [];
+    const tags = postTagsRow.map(pt => pt.tags).filter((t): t is PostTag => t != null);
+    const { post_tags: _drop, ...post } = row;
+    void _drop;
+    return { ...post, tags } as PostListItem;
+  });
 }

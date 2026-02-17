@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   pr-create:
+    if: false # PR 자동 생성 일시 중지 (다시 켜려면 이 줄 삭제)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
