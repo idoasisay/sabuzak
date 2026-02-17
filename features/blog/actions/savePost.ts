@@ -36,7 +36,7 @@ export async function savePost(input: SavePostInput): Promise<SavePostResult> {
 
   const supabase = await createClient();
 
-  const excerptText = excerpt?.trim() || stripHtml(content).slice(0, 200) || "";
+  const excerptText = (excerpt?.trim() || stripHtml(content)).slice(0, 150) || "";
   let slug = slugify(title);
   if (!slug || slug === "untitled") slug = `post-${Date.now()}`;
 

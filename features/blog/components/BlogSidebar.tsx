@@ -28,18 +28,42 @@ type BlogSidebarProps = {
   posts?: PostListItem[];
 };
 
+function getPostSlugFromPathname(pathname: string): string | null {
+  const segment = pathname.replace(/^\/blog\/?/, "").split("/")[0] ?? "";
+  if (!segment || segment === INFO_SLUG || segment === "write") return null;
+  return segment;
+}
+
 export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
   const [open, setOpen] = useState(true);
   const [expandedSlugs, setExpandedSlugs] = useState<Set<string>>(new Set());
+  const [collapsedSlugs, setCollapsedSlugs] = useState<Set<string>>(new Set());
   const pathname = usePathname();
+  const currentPostSlug = getPostSlugFromPathname(pathname);
+  const categoryContainingPost = currentPostSlug
+    ? categories.find(c => c.posts.some(p => p.slug === currentPostSlug))
+    : null;
+
+  const isCategoryExpanded = (slug: string) =>
+    !collapsedSlugs.has(slug) && (expandedSlugs.has(slug) || categoryContainingPost?.slug === slug);
 
   const toggleCategory = (slug: string) => {
-    setExpandedSlugs(prev => {
-      const next = new Set(prev);
-      if (next.has(slug)) next.delete(slug);
-      else next.add(slug);
-      return next;
-    });
+    if (categoryContainingPost?.slug === slug && isCategoryExpanded(slug)) {
+      setCollapsedSlugs(prev => new Set([...prev, slug]));
+    } else if (collapsedSlugs.has(slug)) {
+      setCollapsedSlugs(prev => {
+        const next = new Set(prev);
+        next.delete(slug);
+        return next;
+      });
+    } else {
+      setExpandedSlugs(prev => {
+        const next = new Set(prev);
+        if (next.has(slug)) next.delete(slug);
+        else next.add(slug);
+        return next;
+      });
+    }
   };
 
   const searchParams = useSearchParams();
@@ -135,8 +159,9 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
             {categories.length > 0 && (
               <>
                 {categories.map(({ id, name, slug, posts: categoryPosts }) => {
-                  const isExpanded = expandedSlugs.has(slug);
-                  const isActive = currentCategory === slug; // 현재 선택된 카테고리
+                  const isExpanded = isCategoryExpanded(slug);
+                  const isActive =
+                    currentCategory === slug || (!!currentPostSlug && categoryContainingPost?.slug === slug);
 
                   return (
                     <div key={id}>
