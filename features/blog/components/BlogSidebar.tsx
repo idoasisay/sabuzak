@@ -227,16 +227,18 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
             {posts.length > 0 && (
               <>
                 <p className="mb-2 mt-3 block text-xs font-medium text-muted-foreground/80">최근 등록된 글</p>
-                {posts.map(({ slug, title }) => (
-                  <Link
-                    key={slug}
-                    href={`/blog/${slug}`}
-                    className={`truncate text-xs p-1 hover:text-foreground flex items-center gap-2 ${pathname === `/blog/${slug}` ? "font-medium text-foreground" : ""}`}
-                  >
-                    <FileText size={16} />
-                    {title}
-                  </Link>
-                ))}
+                <div className="flex flex-col gap-1">
+                  {posts.map(({ slug, title }) => (
+                    <Link
+                      key={slug}
+                      href={`/blog/${slug}`}
+                      className={`truncate text-xs p-1 hover:text-foreground flex items-center gap-2 ${pathname === `/blog/${slug}` ? "font-medium text-foreground" : ""}`}
+                    >
+                      <FileText size={16} className="text-muted-foreground/70" />
+                      {title}
+                    </Link>
+                  ))}
+                </div>
               </>
             )}
           </div>
