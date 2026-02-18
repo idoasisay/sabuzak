@@ -1,10 +1,9 @@
 import { Suspense } from "react";
 import { BlogSelectionBox } from "./components/BlogSelectionBox";
 import { BlogSidebar } from "./components/BlogSidebar";
+import { BlogMain } from "./components/BlogMain";
 import { getCategoriesWithPosts } from "./api/getCategories";
-import { INFO_LIST_ITEM } from "./constants";
-
-const SIDEBAR_POSTS = [INFO_LIST_ITEM];
+import { getRecentPosts } from "./api/getPosts";
 
 function SidebarFallback() {
   return (
@@ -19,14 +18,14 @@ function SidebarFallback() {
 }
 
 export default async function BlogLayoutView({ children }: { children: React.ReactNode }) {
-  const categoriesWithPosts = await getCategoriesWithPosts();
+  const [categoriesWithPosts, recentPosts] = await Promise.all([getCategoriesWithPosts(), getRecentPosts(7)]);
 
   return (
     <BlogSelectionBox>
       <Suspense fallback={<SidebarFallback />}>
-        <BlogSidebar categories={categoriesWithPosts} posts={SIDEBAR_POSTS} />
+        <BlogSidebar categories={categoriesWithPosts} posts={recentPosts} />
       </Suspense>
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{children}</main>
+      <BlogMain>{children}</BlogMain>
     </BlogSelectionBox>
   );
 }

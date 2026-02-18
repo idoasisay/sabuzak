@@ -43,6 +43,24 @@ export async function getPostsList(): Promise<PostListItem[]> {
   return fromDb;
 }
 
+/** 최근 N일 이내 등록된 발행 글 목록 (기본 7일) */
+export async function getRecentPosts(withinDays = 7): Promise<PostListItem[]> {
+  const supabase = await createClient();
+  const since = new Date();
+  since.setDate(since.getDate() - withinDays);
+  const sinceIso = since.toISOString();
+
+  const { data, error } = await supabase
+    .from("posts")
+    .select("slug, title, created_at")
+    .eq("published", true)
+    .gte("created_at", sinceIso)
+    .order("created_at", { ascending: false });
+
+  if (error) return [];
+  return (data ?? []) as PostListItem[];
+}
+
 // DESC 상세 페이지용: 상세 페이지에 표시할 데이터만 조회 */
 export async function getPostBySlug(slug: string): Promise<Post | null> {
   const supabase = await createClient();
