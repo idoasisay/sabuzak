@@ -4,8 +4,6 @@ on:
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
     branches: ["main"]
-  issue_comment:
-    types: [created]
 
 permissions:
   issues: write
@@ -38,8 +36,8 @@ jobs:
   ai-code-review:
     needs: ci-check
     runs-on: ubuntu-latest
-    # Review: 모든 PR 이벤트 포함 (synchronize 포함, 재PR 시에도 실행)
-    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && github.event.issue.pull_request) }}
+    # Review: PR 이벤트에서만 실행 (issue_comment 제거로 봇 코멘트 시 재실행 방지)
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
         with:
