@@ -2,11 +2,13 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CursorStrokeText } from "@/components/CursorStrokeText";
 
+const BLOG_HREF = process.env.NEXT_PUBLIC_BLOG_URL ?? "/blog";
+
 export function Header() {
   return (
     <header className="bg-grid-center flex justify-center gap-x-(--grid-pair-width) px-(--grid-edge) select-none">
       <nav className="flex flex-col flex-1 items-end text-sm">
-        <Link href="/blog" className="text-muted-foreground hover:text-foreground">
+        <Link href={BLOG_HREF} className="text-muted-foreground hover:text-foreground">
           Blog
         </Link>
         <Link href="/projects" className="text-muted-foreground hover:text-foreground">

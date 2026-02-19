@@ -119,7 +119,7 @@ export function Toolbar({ editor, representativeImageUrl, onSetThumbnail, onImag
   const currentLink = editor.getAttributes("link").href ?? "";
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-t border-border bg-muted/30 px-1 py-1">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-t border-border bg-muted/30 px-1 py-[3.1px]">
       {/* 1. Heading / Paragraph */}
       <select
         value={
