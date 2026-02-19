@@ -1,5 +1,5 @@
 export const btn =
-  "flex size-8 items-center justify-center rounded border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40";
+  "text-xs flex size-8 items-center justify-center rounded border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40";
 export const active = "bg-muted text-foreground ring-1 ring-border ring-inset";
 
 export const FONT_FAMILIES = [

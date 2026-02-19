@@ -25,16 +25,24 @@ import {
 import { cn } from "@/lib/utils";
 import { btn, active, FONT_FAMILIES, COLOR_PRESETS } from "./constants";
 
+const MAX_IMAGE_SIZE_MB = 5;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+
 const SEP = <span className="mx-1 h-5 w-px bg-border" aria-hidden />;
 
-export function Toolbar({ editor }) {
+const IMAGE_SIZE_SMALL = 240;
+const IMAGE_SIZE_LARGE = 560;
+
+export function Toolbar({ editor, representativeImageUrl, onSetThumbnail, onImageFileSelect }) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [imageOpen, setImageOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageError, setImageError] = useState("");
   const [colorOpen, setColorOpen] = useState(false);
   const linkInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const imageFileInputRef = useRef(null);
   const linkWrapRef = useRef(null);
   const imageWrapRef = useRef(null);
   const colorWrapRef = useRef(null);
@@ -85,7 +93,27 @@ export function Toolbar({ editor }) {
     const src = imageUrl.trim();
     if (src) editor.chain().focus().setImage({ src }).run();
     setImageUrl("");
+    setImageError("");
     setImageOpen(false);
+  };
+
+  const handleImageFileChange = e => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImageError("");
+    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+      setImageError(`파일 크기는 ${MAX_IMAGE_SIZE_MB}MB 이하여야 합니다.`);
+      return;
+    }
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setImageError("지원 형식: JPEG, PNG, GIF, WebP");
+      return;
+    }
+    if (onImageFileSelect) {
+      onImageFileSelect(file);
+      setImageOpen(false);
+    }
   };
 
   const currentLink = editor.getAttributes("link").href ?? "";
@@ -124,6 +152,127 @@ export function Toolbar({ editor }) {
         <option value="h2">제목 2</option>
         <option value="h3">제목 3</option>
       </select>
+      {SEP}
+
+      {/* 14. Image */}
+      <div ref={imageWrapRef} className="relative">
+        <button type="button" onClick={() => setImageOpen(o => !o)} className={btn} title="이미지">
+          <ImageIcon size={16} />
+        </button>
+        {imageOpen && (
+          <div className="absolute left-0 top-full z-20 mt-1 flex flex-col gap-1 rounded-md border border-border bg-background p-2 shadow-md">
+            <input
+              ref={imageInputRef}
+              type="url"
+              value={imageUrl}
+              onChange={e => setImageUrl(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && applyImage()}
+              placeholder="https://..."
+              className="w-56 rounded border border-border bg-background px-2 py-1 text-sm outline-none"
+            />
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={applyImage}
+                className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground"
+              >
+                URL 삽입
+              </button>
+              <input
+                ref={imageFileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                className="hidden"
+                onChange={handleImageFileChange}
+              />
+              <button
+                type="button"
+                onClick={() => imageFileInputRef.current?.click()}
+                className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-muted"
+              >
+                파일 업로드
+              </button>
+            </div>
+            {imageError && <p className="text-destructive text-xs">{imageError}</p>}
+          </div>
+        )}
+      </div>
+      {/* 이미지 선택 시: 대표 이미지로 설정 + 크기 조정 */}
+      {editor.isActive("image") && (
+        <>
+          {SEP}
+          {onSetThumbnail && (
+            <button
+              type="button"
+              onClick={() => {
+                const src = editor.getAttributes("image").src;
+                if (!src) return;
+                if (src === representativeImageUrl) {
+                  onSetThumbnail(null);
+                } else {
+                  onSetThumbnail(src);
+                }
+              }}
+              className={cn(btn, editor.getAttributes("image").src === representativeImageUrl && active)}
+              title={
+                editor.getAttributes("image").src === representativeImageUrl
+                  ? "대표 해제"
+                  : "이 이미지를 글 목록 썸네일로 사용"
+              }
+            >
+              대표
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              const { from } = editor.state.selection;
+              editor
+                .chain()
+                .setNodeSelection(from)
+                .focus()
+                .updateAttributes("image", { width: IMAGE_SIZE_SMALL, height: null })
+                .run();
+            }}
+            className={cn(btn, editor.getAttributes("image").width === IMAGE_SIZE_SMALL && active)}
+            title="작게"
+          >
+            작게
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const { from } = editor.state.selection;
+              editor
+                .chain()
+                .setNodeSelection(from)
+                .focus()
+                .updateAttributes("image", { width: null, height: null })
+                .run();
+            }}
+            className={cn(btn, editor.getAttributes("image").width === null && active)}
+            title="보통 (원본)"
+          >
+            보통
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const { from } = editor.state.selection;
+              editor
+                .chain()
+                .setNodeSelection(from)
+                .focus()
+                .updateAttributes("image", { width: IMAGE_SIZE_LARGE, height: null })
+                .run();
+            }}
+            className={cn(btn, editor.getAttributes("image").width === IMAGE_SIZE_LARGE && active)}
+            title="크게"
+          >
+            크게
+          </button>
+        </>
+      )}
       {SEP}
 
       {/* 2. List */}
@@ -325,67 +474,79 @@ export function Toolbar({ editor }) {
       </button>
       {SEP}
 
-      {/* 13. Align */}
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().setTextAlign("left").run()}
-        className={cn(btn, editor.isActive({ textAlign: "left" }) && active)}
-        title="왼쪽 정렬"
-      >
-        <TextAlignStart size={16} />
-      </button>
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().setTextAlign("center").run()}
-        className={cn(btn, editor.isActive({ textAlign: "center" }) && active)}
-        title="가운데 정렬"
-      >
-        <TextAlignCenter size={16} />
-      </button>
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().setTextAlign("right").run()}
-        className={cn(btn, editor.isActive({ textAlign: "right" }) && active)}
-        title="오른쪽 정렬"
-      >
-        <TextAlignEnd size={16} />
-      </button>
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-        className={cn(btn, editor.isActive({ textAlign: "justify" }) && active)}
-        title="양쪽 정렬"
-      >
-        <TextAlignJustify size={16} />
-      </button>
-      {SEP}
-
-      {/* 14. Image */}
-      <div ref={imageWrapRef} className="relative">
-        <button type="button" onClick={() => setImageOpen(o => !o)} className={btn} title="이미지">
-          <ImageIcon size={16} />
-        </button>
-        {imageOpen && (
-          <div className="absolute left-0 top-full z-20 mt-1 flex flex-col gap-1 rounded-md border border-border bg-background p-2 shadow-md">
-            <input
-              ref={imageInputRef}
-              type="url"
-              value={imageUrl}
-              onChange={e => setImageUrl(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && applyImage()}
-              placeholder="https://..."
-              className="w-56 rounded border border-border bg-background px-2 py-1 text-sm outline-none"
-            />
-            <button
-              type="button"
-              onClick={applyImage}
-              className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground"
-            >
-              삽입
-            </button>
-          </div>
-        )}
-      </div>
+      {/* 13. Align (텍스트: textAlign / 이미지: image align 속성) */}
+      {editor.isActive("image") ? (
+        <>
+          <button
+            type="button"
+            onMouseDown={e => {
+              e.preventDefault();
+              editor.chain().focus().updateAttributes("image", { align: "left" }).run();
+            }}
+            className={cn(btn, (editor.getAttributes("image").align ?? "left") === "left" && active)}
+            title="왼쪽 정렬"
+          >
+            <TextAlignStart size={16} />
+          </button>
+          <button
+            type="button"
+            onMouseDown={e => {
+              e.preventDefault();
+              editor.chain().focus().updateAttributes("image", { align: "center" }).run();
+            }}
+            className={cn(btn, editor.getAttributes("image").align === "center" && active)}
+            title="가운데 정렬"
+          >
+            <TextAlignCenter size={16} />
+          </button>
+          <button
+            type="button"
+            onMouseDown={e => {
+              e.preventDefault();
+              editor.chain().focus().updateAttributes("image", { align: "right" }).run();
+            }}
+            className={cn(btn, editor.getAttributes("image").align === "right" && active)}
+            title="오른쪽 정렬"
+          >
+            <TextAlignEnd size={16} />
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign("left").run()}
+            className={cn(btn, editor.isActive({ textAlign: "left" }) && active)}
+            title="왼쪽 정렬"
+          >
+            <TextAlignStart size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign("center").run()}
+            className={cn(btn, editor.isActive({ textAlign: "center" }) && active)}
+            title="가운데 정렬"
+          >
+            <TextAlignCenter size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign("right").run()}
+            className={cn(btn, editor.isActive({ textAlign: "right" }) && active)}
+            title="오른쪽 정렬"
+          >
+            <TextAlignEnd size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+            className={cn(btn, editor.isActive({ textAlign: "justify" }) && active)}
+            title="양쪽 정렬"
+          >
+            <TextAlignJustify size={16} />
+          </button>
+        </>
+      )}
       {SEP}
 
       {/* 16. Font family */}
