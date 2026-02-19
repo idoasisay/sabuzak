@@ -28,7 +28,9 @@ function stripHtml(html: string): string {
 
 export async function savePost(input: SavePostInput): Promise<SavePostResult> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "로그인이 필요합니다." };
 
   const { postId, title, content, excerpt, categoryId, published, publishedAt } = input;
