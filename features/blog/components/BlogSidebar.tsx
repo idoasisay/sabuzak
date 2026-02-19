@@ -214,7 +214,7 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
                           {categoryPosts.map(({ slug: postSlug, title }) => (
                             <li key={postSlug}>
                               <Link
-                                href={`/blog/${postSlug}`}
+                                href={`/blog/${encodeURIComponent(postSlug)}`}
                                 className={cn(
                                   "truncate text-xs hover:text-foreground flex items-center gap-2 p-1 px-3 rounded-md",
                                   pathname === `/blog/${postSlug}`
