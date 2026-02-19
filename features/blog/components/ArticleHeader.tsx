@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BlogScrollContext } from "./BlogMain";
+import BlogLink from "./BlogLink";
 
 /** Show thin bar when scrolled past this (px). Full header scrolls away with content. */
 const THIN_BAR_THRESHOLD = 80;
@@ -95,12 +95,12 @@ export function ArticleHeader({ title, dateString, tags }: ArticleHeaderProps) {
           <ul className="mt-2 flex flex-wrap justify-center gap-2">
             {tags.map(tag => (
               <li key={tag.id}>
-                <Link
-                  href={`/blog?tag=${encodeURIComponent(tag.slug)}`}
+                <BlogLink
+                  href={`/blog/?tag=${encodeURIComponent(tag.slug)}`}
                   className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   {tag.name}
-                </Link>
+                </BlogLink>
               </li>
             ))}
           </ul>

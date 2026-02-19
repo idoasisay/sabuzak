@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { PostListItem } from "./api/getPosts";
 import { FileText, NotebookPen, ChevronsLeftRight } from "lucide-react";
 import Image from "next/image";
+import BlogLink from "./components/BlogLink";
 
 type BlogCategoryViewProps = {
   categoryName: string;
@@ -9,7 +9,6 @@ type BlogCategoryViewProps = {
 };
 
 export function BlogCategoryView({ categoryName, posts }: BlogCategoryViewProps) {
-  console.log(posts);
   return (
     <div className="flex flex-col h-full">
       <header className="flex flex-row items-center p-[5.5px] px-3 gap-2 border-b">
@@ -35,7 +34,7 @@ export function BlogCategoryView({ categoryName, posts }: BlogCategoryViewProps)
                   className="text-white opacity-10 transition-opacity duration-200 group-hover:opacity-100"
                 />
               </div>
-              <Link href={`/blog/${encodeURIComponent(slug)}`}>
+              <BlogLink href={`/blog/${encodeURIComponent(slug)}`}>
                 <article className="flex flex-col h-48">
                   <div className="flex flex-row items-center p-2 bg-secondary rounded-t-md gap-2 min-h-0 shrink-0">
                     <FileText className="text-muted-foreground shrink-0" size={16} />
@@ -82,7 +81,7 @@ export function BlogCategoryView({ categoryName, posts }: BlogCategoryViewProps)
                     </div>
                   </div>
                 </article>
-              </Link>
+              </BlogLink>
             </li>
           ))}
         </ul>

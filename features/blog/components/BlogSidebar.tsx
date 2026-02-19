@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import type { CategoryWithPosts } from "../api/getCategories";
 import type { PostListItem } from "../api/getPosts";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import BlogLink from "./BlogLink";
 
 const SIDEBAR_OPEN = 14; // rem
 const SIDEBAR_CLOSED = 3; // rem
@@ -31,10 +32,18 @@ type BlogSidebarProps = {
   posts?: PostListItem[];
 };
 
+/** pathname이 /blog/slug 또는 /slug 형태일 때 글 slug만 추출 (서브도메인 대응) */
 function getPostSlugFromPathname(pathname: string): string | null {
-  const segment = pathname.replace(/^\/blog\/?/, "").split("/")[0] ?? "";
+  // 1. URL 인코딩된 한글을 원래 한글로 복구 (핵심)
+  const decodedPath = decodeURIComponent(pathname);
+
+  const withoutBlog = decodedPath.replace(/^\/blog\/?/, "");
+  const segment = (withoutBlog.startsWith("/") ? withoutBlog.slice(1) : withoutBlog).split("/")[0] ?? "";
+
   if (!segment || segment === INFO_SLUG || segment === "write") return null;
-  return segment;
+
+  // 2. 맥 환경 자모음 분리 방지를 위해 NFC 정규화 적용
+  return segment.normalize("NFC");
 }
 
 export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
@@ -52,7 +61,7 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
   }
   const currentPostSlug = getPostSlugFromPathname(pathname);
   const categoryContainingPost = currentPostSlug
-    ? categories.find(c => c.posts.some(p => p.slug === currentPostSlug))
+    ? categories.find(c => c.posts.some(p => p.slug.normalize("NFC") === currentPostSlug))
     : null;
 
   const isCategoryExpanded = (slug: string) =>
@@ -103,12 +112,12 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
         </button>
         {open && (
           <div className="w-full flex items-center justify-between">
-            <Link href={`/blog/${INFO_SLUG}`}>
+            <BlogLink href={`/blog/${INFO_SLUG}`}>
               <p className="font-silkscreen text-info text-sm pb-[2px]">MIO_DEV_BLOG</p>
-            </Link>
-            <Link href="/blog/write">
+            </BlogLink>
+            <BlogLink href="/blog/write">
               <SquarePen className={`${iconButtonClass} text-muted-foreground/80 hover:text-foreground`} size={20} />
-            </Link>
+            </BlogLink>
           </div>
         )}
       </div>
@@ -121,50 +130,45 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
         >
           {!open && (
             <div className="flex flex-col items-center justify-center p-2 gap-2">
-              {[
-                {
-                  href: `/blog/${INFO_SLUG}`,
-                  icon: BadgeAlert,
-                  label: "시작하는 글",
-                  active: pathname === `/blog/${INFO_SLUG}`,
-                },
-                { href: "/", icon: AtSign, label: "Resume", target: "_blank" },
-              ].map(item => (
-                <Link key={item.href} href={item.href} target={item.target}>
-                  <item.icon
-                    size={32}
-                    className={`${iconButtonClass} text-muted-foreground hover:text-foreground transition-colors duration-200`}
-                  />
-                </Link>
-              ))}
+              <BlogLink href={`/blog/${INFO_SLUG}`} className={iconButtonClass}>
+                <BadgeAlert
+                  size={32}
+                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+                />
+              </BlogLink>
+              <Link href="/" target="_blank" className={iconButtonClass}>
+                <AtSign
+                  size={32}
+                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+                />
+              </Link>
             </div>
           )}
 
           {/* 시작하는 글 & Resume */}
           <div className={cn("flex flex-col border-b border-border", open ? "" : "hidden")}>
-            {[
-              {
-                href: `/blog/${INFO_SLUG}`,
-                icon: BadgeAlert,
-                label: "시작하는 글",
-                active: pathname === `/blog/${INFO_SLUG}`,
-              },
-              { href: "/", icon: AtSign, label: "Resume", target: "_blank" },
-            ].map(item => (
-              <Link
-                key={item.href}
-                href={item.href}
-                target={item.target}
-                className={cn(
-                  "flex items-center gap-2 p-2 hover:text-foreground transition-colors duration-200",
-                  item.active ? "bg-accent text-foreground" : "text-muted-foreground"
-                )}
-                style={{ width: `${SIDEBAR_OPEN}rem` }} // 너비 고정으로 텍스트 밀림 방지
-              >
-                <item.icon size={16} className="shrink-0 ml-1" />
-                <p className="truncate">{item.label}</p>
-              </Link>
-            ))}
+            <BlogLink
+              href={`/blog/${INFO_SLUG}`}
+              className={cn(
+                "flex items-center gap-2 p-2 hover:text-foreground transition-colors duration-200",
+                pathname === `/blog/${INFO_SLUG}` || pathname === `/${INFO_SLUG}`
+                  ? "bg-accent text-foreground"
+                  : "text-muted-foreground"
+              )}
+              style={{ width: `${SIDEBAR_OPEN}rem` }}
+            >
+              <BadgeAlert size={16} className="shrink-0 ml-1" />
+              <p className="truncate">시작하는 글</p>
+            </BlogLink>
+            <Link
+              href="/"
+              target="_blank"
+              className="flex items-center gap-2 p-2 hover:text-foreground transition-colors duration-200 text-muted-foreground"
+              style={{ width: `${SIDEBAR_OPEN}rem` }}
+            >
+              <AtSign size={16} className="shrink-0 ml-1" />
+              <p className="truncate">Resume</p>
+            </Link>
           </div>
 
           <div className={cn("p-2 pt-3", open ? "" : "hidden")}>
@@ -197,8 +201,8 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
                             size={16}
                           />
                         </button>
-                        <Link
-                          href={`/blog?category=${encodeURIComponent(slug)}`}
+                        <BlogLink
+                          href={`/blog/?category=${encodeURIComponent(slug)}`}
                           className="min-w-0 flex-1 truncate py-1"
                         >
                           <span
@@ -206,25 +210,25 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
                           >
                             {name}
                           </span>
-                        </Link>
+                        </BlogLink>
                       </div>
                       {/* MEMO 포스트 목록 */}
                       {isExpanded && categoryPosts.length > 0 && (
                         <ul className="list-none py-0.5">
                           {categoryPosts.map(({ slug: postSlug, title }) => (
                             <li key={postSlug}>
-                              <Link
+                              <BlogLink
                                 href={`/blog/${encodeURIComponent(postSlug)}`}
                                 className={cn(
                                   "truncate text-xs hover:text-foreground flex items-center gap-2 p-1 px-3 rounded-md",
-                                  pathname === `/blog/${postSlug}`
+                                  currentPostSlug === postSlug.normalize("NFC")
                                     ? "font-medium text-foreground bg-accent"
                                     : "text-muted-foreground"
                                 )}
                               >
                                 <CornerDownRight className="size-3" />
                                 {title}
-                              </Link>
+                              </BlogLink>
                             </li>
                           ))}
                         </ul>
@@ -242,14 +246,17 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
                 <p className="mb-2 mt-3 block text-xs font-medium text-muted-foreground/80">최근 등록된 글</p>
                 <div className="flex flex-col gap-1">
                   {posts.map(({ slug, title }) => (
-                    <Link
+                    <BlogLink
                       key={slug}
                       href={`/blog/${slug}`}
-                      className={`truncate text-xs p-1 hover:text-foreground flex items-center gap-2 ${pathname === `/blog/${slug}` ? "font-medium text-foreground" : ""}`}
+                      className={cn(
+                        "truncate text-xs p-1 hover:text-foreground flex items-center gap-2",
+                        currentPostSlug === slug && "font-medium text-foreground"
+                      )}
                     >
                       <FileText size={16} className="text-muted-foreground/70" />
                       {title}
-                    </Link>
+                    </BlogLink>
                   ))}
                 </div>
               </>

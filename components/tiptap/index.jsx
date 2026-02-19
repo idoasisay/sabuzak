@@ -19,6 +19,9 @@ import { PublishSidebar } from "./PublishSidebar";
 import { savePost } from "@/features/blog/actions/savePost";
 import { uploadImage } from "@/features/blog/actions/uploadImage";
 
+/** 새 글 기본 본문 (빈 문단 여러 개로 최소 높이 확보) */
+const EMPTY_CONTENT = Array(14).fill("<p></p>").join("");
+
 /** @typedef {{ id: string; name: string; slug: string }} CategoryItem */
 /** @typedef {{ id: string; name: string; slug: string }} TagItem */
 /** @typedef {{ id: string; slug: string; title: string; content: string; category_id: string; tag_ids: string[]; published_at: string | null; thumbnail_url?: string | null }} PostForEdit */
@@ -45,7 +48,7 @@ export default function TiptapEditor({ categories = [], tags = [], initialPost =
       Color,
       FontFamily,
     ],
-    content: initialPost?.content ?? "<p>Hello World! 🌎</p>",
+    content: initialPost?.content ?? EMPTY_CONTENT,
     immediatelyRender: false,
     editorProps: {
       attributes: {
