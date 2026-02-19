@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { INFO_SLUG } from "../constants";
 import {
   SquarePen,
@@ -13,6 +15,7 @@ import {
   AtSign,
   BadgeAlert,
   FileText,
+  LogOut,
 } from "lucide-react";
 import { iconButtonClass } from "../styles/uiClasses";
 import { cn } from "@/lib/utils";
@@ -35,10 +38,18 @@ function getPostSlugFromPathname(pathname: string): string | null {
 }
 
 export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
+  const router = useRouter();
+  const session = useAuthStore(s => s.session);
   const [open, setOpen] = useState(true);
   const [expandedSlugs, setExpandedSlugs] = useState<Set<string>>(new Set());
   const [collapsedSlugs, setCollapsedSlugs] = useState<Set<string>>(new Set());
   const pathname = usePathname();
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.refresh();
+  }
   const currentPostSlug = getPostSlugFromPathname(pathname);
   const categoryContainingPost = currentPostSlug
     ? categories.find(c => c.posts.some(p => p.slug === currentPostSlug))
@@ -91,12 +102,14 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
           />
         </button>
         {open && (
-          <>
-            <p className="min-w-0 flex-1 truncate font-silkscreen text-info text-sm">MIO_DEV_BLOG</p>
-            <Link href="/blog/write" className="">
+          <div className="w-full flex items-center justify-between">
+            <Link href={`/blog/${INFO_SLUG}`}>
+              <p className="font-silkscreen text-info text-sm pb-[2px]">MIO_DEV_BLOG</p>
+            </Link>
+            <Link href="/blog/write">
               <SquarePen className={`${iconButtonClass} text-muted-foreground/80 hover:text-foreground`} size={20} />
             </Link>
-          </>
+          </div>
         )}
       </div>
 
@@ -243,7 +256,12 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
             )}
           </div>
         </nav>
-        <div className="flex justify-end p-3">
+        <div className="flex items-end flex-col gap-2 p-3">
+          {session && (
+            <button type="button" onClick={handleLogout} className={iconButtonClass} aria-label="로그아웃">
+              <LogOut className="text-muted-foreground hover:text-foreground" size={16} />
+            </button>
+          )}
           <ThemeToggle />
         </div>
       </div>
