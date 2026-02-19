@@ -27,14 +27,16 @@ function stripHtml(html: string): string {
 }
 
 export async function savePost(input: SavePostInput): Promise<SavePostResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "로그인이 필요합니다." };
+
   const { postId, title, content, excerpt, categoryId, published, publishedAt } = input;
   const tagIds = (input.tagIds ?? []).filter((id): id is string => Boolean(id));
   const tagNamesToAdd = (input.tagNamesToAdd ?? []).map(n => String(n).trim()).filter(n => n.length > 0);
 
   if (!title.trim()) return { ok: false, error: "제목을 입력해 주세요." };
   if (!categoryId) return { ok: false, error: "카테고리를 선택해 주세요." };
-
-  const supabase = await createClient();
 
   const excerptText = (excerpt?.trim() || stripHtml(content)).slice(0, 150) || "";
   let slug = slugify(title);
