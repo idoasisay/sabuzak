@@ -8,6 +8,9 @@ export async function deletePost(slug: string): Promise<DeletePostResult> {
   if (!slug?.trim()) return { ok: false, error: "slug가 없습니다." };
 
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "로그인이 필요합니다." };
+
   const { data: post, error: fetchError } = await supabase
     .from("posts")
     .select("id")
