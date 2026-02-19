@@ -178,5 +178,12 @@
   height: auto;
   border-radius: 0.375rem;
   display: block;
-  margin: 0.5em 0;
+  margin: 0;
+}
+.tiptap-editor img[data-align="center"] {
+  margin-left: auto;
+  margin-right: auto;
+}
+.tiptap-editor img[data-align="right"] {
+  margin-left: auto;
 }
