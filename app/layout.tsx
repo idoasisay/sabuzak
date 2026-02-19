@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Silkscreen, Orbit } from "next/font/google";
 import { ThemeSync } from "@/components/ThemeSync";
+import { AuthSync } from "@/components/AuthSync";
 import "@/styles/globals.css";
 
 const geistSans = Geist({
@@ -41,6 +42,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${silkscreen.variable} ${orbit.variable} antialiased`}
       >
         <ThemeSync />
+        <AuthSync />
         {children}
       </body>
     </html>
