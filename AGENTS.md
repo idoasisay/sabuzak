@@ -107,10 +107,10 @@ export function Counter() { ... }
 
 ## 상세 문서
 
-| 문서                                      | 내용                                         |
-| ----------------------------------------- | -------------------------------------------- |
-| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 폴더 구조, 렌더링 플로우, 네이밍 컨벤션      |
-| [ROUTING.md](./docs/ROUTING.md)           | Next.js App Router, 동적 라우트, Route Group |
-| [STYLING.md](./docs/STYLING.md)           | 디자인 토큰 정의, 사용 가능한 클래스         |
-| [STATE.md](./docs/STATE.md)               | Global/Scoped Store 패턴, 코드 예시          |
+| 문서                                      | 내용                                               |
+| ----------------------------------------- | -------------------------------------------------- |
+| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 폴더 구조, 렌더링 플로우, 네이밍 컨벤션            |
+| [ROUTING.md](./docs/ROUTING.md)           | Next.js App Router, 동적 라우트, Route Group       |
+| [STYLING.md](./docs/STYLING.md)           | 디자인 토큰 정의, 사용 가능한 클래스               |
+| [STATE.md](./docs/STATE.md)               | Global/Scoped Store 패턴, 코드 예시                |
 | [AUTH.md](./docs/AUTH.md)                 | Supabase Auth, 로그인 페이지, 서버/클라이언트 보호 |
