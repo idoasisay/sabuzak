@@ -15,6 +15,8 @@ export type SavePostInput = {
   published: boolean;
   /** 발행 시각 (발행일 때만 사용, 없으면 now()) */
   publishedAt?: string | null;
+  /** 대표 이미지(썸네일) URL. 본문 이미지 중 하나. */
+  thumbnailUrl?: string | null;
 };
 
 export type SavePostResult = { ok: true; postId: string; slug: string } | { ok: false; error: string };
@@ -33,7 +35,7 @@ export async function savePost(input: SavePostInput): Promise<SavePostResult> {
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "로그인이 필요합니다." };
 
-  const { postId, title, content, excerpt, categoryId, published, publishedAt } = input;
+  const { postId, title, content, excerpt, categoryId, published, publishedAt, thumbnailUrl } = input;
   const tagIds = (input.tagIds ?? []).filter((id): id is string => Boolean(id));
   const tagNamesToAdd = (input.tagNamesToAdd ?? []).map(n => String(n).trim()).filter(n => n.length > 0);
 
@@ -66,6 +68,7 @@ export async function savePost(input: SavePostInput): Promise<SavePostResult> {
     category_id: categoryId,
     published,
     published_at: publishedAtValue,
+    thumbnail_url: thumbnailUrl ?? null,
     updated_at: new Date().toISOString(),
   };
 

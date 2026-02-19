@@ -6,6 +6,8 @@ export type PostListItem = {
   /** 목록 카드용 (카테고리/태그 뷰에서만 채워짐) */
   excerpt?: string;
   created_at?: string;
+  /** 대표 이미지(썸네일) URL */
+  thumbnail_url?: string | null;
   tags?: PostTag[];
 };
 
@@ -34,7 +36,7 @@ export async function getPostsList(): Promise<PostListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("posts")
-    .select("slug, title")
+    .select("slug, title, thumbnail_url")
     .eq("published", true)
     .order("created_at", { ascending: false });
 
@@ -52,7 +54,7 @@ export async function getRecentPosts(withinDays = 7): Promise<PostListItem[]> {
 
   const { data, error } = await supabase
     .from("posts")
-    .select("slug, title, created_at")
+    .select("slug, title, created_at, thumbnail_url")
     .eq("published", true)
     .gte("created_at", sinceIso)
     .order("created_at", { ascending: false });
@@ -64,11 +66,15 @@ export async function getRecentPosts(withinDays = 7): Promise<PostListItem[]> {
 // DESC 상세 페이지용: 상세 페이지에 표시할 데이터만 조회 */
 export async function getPostBySlug(slug: string): Promise<Post | null> {
   const supabase = await createClient();
+  const decodedSlug = decodeURIComponent(slug);
+
   const { data, error } = await supabase
     .from("posts")
-    .select("slug, title, content, excerpt, created_at, updated_at, post_tags(tag_id, tags(id, name, slug))")
+    .select(
+      "slug, title, content, excerpt, created_at, updated_at, thumbnail_url, post_tags(tag_id, tags(id, name, slug))"
+    )
     .eq("published", true)
-    .eq("slug", slug)
+    .eq("slug", decodedSlug)
     .single();
 
   if (error || !data) return null;
@@ -85,7 +91,9 @@ export async function getPostForEdit(slug: string): Promise<PostForEdit | null> 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("posts")
-    .select("id, slug, title, content, excerpt, created_at, updated_at, category_id, published_at, post_tags(tag_id)")
+    .select(
+      "id, slug, title, content, excerpt, created_at, updated_at, category_id, published_at, thumbnail_url, post_tags(tag_id)"
+    )
     .eq("slug", slug)
     .maybeSingle();
 
@@ -119,7 +127,7 @@ export async function getPostsByCategorySlug(categorySlug: string): Promise<Post
 
   const { data, error } = await supabase
     .from("posts")
-    .select("slug, title, excerpt, created_at, post_tags(tag_id, tags(id, name, slug))")
+    .select("slug, title, excerpt, created_at, thumbnail_url, post_tags(tag_id, tags(id, name, slug))")
     .eq("published", true)
     .eq("category_id", category.id)
     .order("created_at", { ascending: false });
@@ -172,7 +180,7 @@ export async function getPostsByTagSlug(tagSlug: string): Promise<PostListItem[]
   const postIds = postTags.map(pt => pt.post_id);
   const { data: posts, error } = await supabase
     .from("posts")
-    .select("slug, title, excerpt, created_at, post_tags(tag_id, tags(id, name, slug))")
+    .select("slug, title, excerpt, created_at, thumbnail_url, post_tags(tag_id, tags(id, name, slug))")
     .eq("published", true)
     .in("id", postIds)
     .order("created_at", { ascending: false });
