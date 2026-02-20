@@ -86,6 +86,26 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   return { ...post, tags } as Post;
 }
 
+/** 임시 저장(미발행) 글 목록 - 에디터 드롭다운용 */
+export type DraftListItem = {
+  id: string;
+  slug: string;
+  title: string;
+  updated_at: string;
+};
+
+export async function getDraftPosts(): Promise<DraftListItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select("id, slug, title, updated_at")
+    .eq("published", false)
+    .order("updated_at", { ascending: false });
+
+  if (error) return [];
+  return (data ?? []) as DraftListItem[];
+}
+
 // DESC 편집 페이지용: slug로 글 조회 (published 무관), category_id·tag_ids 포함 */
 export async function getPostForEdit(slug: string): Promise<PostForEdit | null> {
   const supabase = await createClient();

@@ -1,5 +1,5 @@
 import type { PostListItem } from "./api/getPosts";
-import { FileText, NotebookPen, ChevronsLeftRight } from "lucide-react";
+import { FileText, NotebookPen, ChevronsLeftRight, BookDashed } from "lucide-react";
 import Image from "next/image";
 import BlogLink from "./components/BlogLink";
 
@@ -17,12 +17,11 @@ export function BlogCategoryView({ categoryName, posts }: BlogCategoryViewProps)
       </header>
 
       {posts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full">
-          <NotebookPen className="size-10 text-muted-foreground" />
-          <p className="mt-6 text-muted-foreground">아직 글이 없습니다.</p>
+        <div className="flex flex-col items-center justify-center h-full bg-accent/30">
+          <BookDashed className="text-muted-foreground/20" size={44} />
         </div>
       ) : (
-        <ul className="min-w-[800px] grid grid-cols-2 gap-4 list-none overflow-y-auto px-10 py-4">
+        <ul className="min-w-[800px] grid grid-cols-2 gap-4 list-none overflow-y-auto px-10 py-4 bg-accent/30">
           {posts.map(({ slug, title, excerpt, created_at, thumbnail_url, tags }) => (
             <li
               key={slug}
