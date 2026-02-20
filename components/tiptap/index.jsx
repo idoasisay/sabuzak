@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useSyncExternalStore, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -13,7 +14,8 @@ import { RepresentativeImageContext } from "./RepresentativeImageContext";
 import { ImageWithRepresentativeExtension } from "./ImageWithRepresentativeExtension";
 import Color from "@tiptap/extension-color";
 import FontFamily from "@tiptap/extension-font-family";
-import { Upload } from "lucide-react";
+import { Upload, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Toolbar } from "./Toolbar";
 import { PublishSidebar } from "./PublishSidebar";
 import { savePost } from "@/features/blog/actions/savePost";
@@ -25,13 +27,17 @@ const EMPTY_CONTENT = Array(14).fill("<p></p>").join("");
 /** @typedef {{ id: string; name: string; slug: string }} CategoryItem */
 /** @typedef {{ id: string; name: string; slug: string }} TagItem */
 /** @typedef {{ id: string; slug: string; title: string; content: string; category_id: string; tag_ids: string[]; published_at: string | null; thumbnail_url?: string | null }} PostForEdit */
+/** @typedef {{ id: string; slug: string; title: string; updated_at: string }} DraftListItem */
 
 /**
- * @param {{ categories?: CategoryItem[]; tags?: TagItem[]; initialPost?: PostForEdit | null }} props
+ * @param {{ categories?: CategoryItem[]; tags?: TagItem[]; initialPost?: PostForEdit | null; drafts?: DraftListItem[] }} props
  */
-export default function TiptapEditor({ categories = [], tags = [], initialPost = null }) {
+export default function TiptapEditor({ categories = [], tags = [], initialPost = null, drafts = [] }) {
+  const router = useRouter();
   const [title, setTitle] = useState(initialPost?.title ?? "");
   const [publishSidebarOpen, setPublishSidebarOpen] = useState(false);
+  const [draftsOpen, setDraftsOpen] = useState(false);
+  const draftsRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [isSaving, setIsSaving] = useState(false);
   const [representativeImageUrl, setRepresentativeImageUrl] = useState(initialPost?.thumbnail_url ?? null);
   const pendingImageFiles = useRef(/** @type {Record<string, File>} */ ({}));
@@ -103,6 +109,24 @@ export default function TiptapEditor({ categories = [], tags = [], initialPost =
     [editor]
   );
 
+  useEffect(() => {
+    if (!draftsOpen) return;
+    const handleClickOutside = e => {
+      if (draftsRef.current && !draftsRef.current.contains(e.target)) setDraftsOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [draftsOpen]);
+
+  const formatDraftTime = raw => {
+    try {
+      const d = new Date(raw);
+      return d.toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" });
+    } catch {
+      return raw;
+    }
+  };
+
   return (
     <RepresentativeImageContext.Provider value={representativeImageUrl}>
       <div className="relative flex min-h-0 flex-1 flex-col bg-background">
@@ -114,6 +138,45 @@ export default function TiptapEditor({ categories = [], tags = [], initialPost =
             placeholder="제목"
             className="min-w-0 flex-1 bg-transparent px-3 py-[5.5px] text-lg font-medium outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
           />
+          <div className="relative shrink-0" ref={draftsRef}>
+            <button
+              type="button"
+              onClick={() => drafts.length > 0 && setDraftsOpen(prev => !prev)}
+              disabled={drafts.length === 0}
+              className={cn(
+                "flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground hover:bg-muted/50",
+                drafts.length === 0 && "cursor-not-allowed opacity-60"
+              )}
+              aria-expanded={draftsOpen}
+              aria-haspopup="listbox"
+            >
+              임시저장({drafts.length})
+              <ChevronDown size={14} className={cn("transition-transform", draftsOpen && "rotate-180")} />
+            </button>
+            {draftsOpen && drafts.length > 0 && (
+              <div
+                role="listbox"
+                className="absolute right-0 top-full z-50 mt-1 max-h-64 min-w-[220px] overflow-y-auto rounded-md border border-border bg-background py-1 shadow-lg"
+              >
+                {drafts.map(draft => (
+                  <button
+                    key={draft.id}
+                    type="button"
+                    role="option"
+                    aria-selected={initialPost?.id === draft.id}
+                    onClick={() => {
+                      setDraftsOpen(false);
+                      router.push(`/blog/write?slug=${encodeURIComponent(draft.slug)}`);
+                    }}
+                    className="flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left text-sm hover:bg-accent"
+                  >
+                    <span className="truncate font-medium text-foreground">{draft.title || "제목 없음"}</span>
+                    <span className="text-xs text-muted-foreground">{formatDraftTime(draft.updated_at)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             type="button"
             onClick={() => setPublishSidebarOpen(true)}

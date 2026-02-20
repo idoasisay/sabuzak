@@ -234,7 +234,7 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
                         </ul>
                       )}
                       {isExpanded && categoryPosts.length === 0 && (
-                        <p className="px-3 py-1.5 pl-5 text-xs text-muted-foreground">아직 글이 없습니다.</p>
+                        <p className="px-3 py-1.5 pl-5 text-xs text-muted-foreground">아직 글이 없어요</p>
                       )}
                     </div>
                   );

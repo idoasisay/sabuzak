@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useId } from "react";
-import { X } from "lucide-react";
+import { useState, useId, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -71,6 +70,15 @@ export function PublishSidebar({
     .map(s => s.trim())
     .filter(Boolean);
 
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = e => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
+
   const handleSave = async published => {
     await onSave({
       categoryId,
@@ -100,17 +108,6 @@ export function PublishSidebar({
         aria-label="발행 설정"
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <h2 className="text-base font-semibold">발행</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="닫기"
-            >
-              <X size={20} />
-            </button>
-          </div>
           <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4">
             {/* 카테고리 */}
             <div className="space-y-2">
