@@ -38,9 +38,17 @@ const rubikMaps = Rubik_Maps({
   weight: ["400"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `${process.env.VERCEL_URL}` : `${process.env.NEXT_PUBLIC_LOCAL_SITE_URL}`);
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "sabuzak",
-  description: "blogblogblogblogblog",
+  description: "mio의 블로그",
+  openGraph: {
+    images: [{ url: "/og.png", width: 1200, height: 630 }],
+  },
 };
 
 export default function RootLayout({
