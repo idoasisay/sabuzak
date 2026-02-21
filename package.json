@@ -15,6 +15,7 @@
     "branch:issue": ".github/scripts/branch_from_issue.sh"
   },
   "dependencies": {
+    "@icons-pack/react-simple-icons": "^13.11.2",
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
