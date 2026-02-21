@@ -188,3 +188,82 @@
 .tiptap-editor img[data-align="right"] {
   margin-left: auto;
 }
+
+/* 별비(픽셀 낙하) 애니메이션 - Info 등에서 사용 */
+@keyframes star-rain-fall {
+  0% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0.2;
+  }
+}
+.star-rain-pixel {
+  top: 0;
+  animation: star-rain-fall linear infinite;
+}
+
+/* 폰트 외곽선: 배경색으로 그려서 어두운 글자에서도 보이게 */
+.text-outline {
+  -webkit-text-stroke: 0.2px hsl(var(--muted-foreground));
+  paint-order: stroke fill;
+}
+/* 스트로크만 강조용 (채움 없음, 커서 스팟 등) — chart-2를 밝게 섞어 형광 느낌 */
+.text-outline-spot {
+  color: transparent;
+  -webkit-text-stroke: 0.2px color-mix(in hsl, hsl(var(--chart-2)) 70%, white);
+  paint-order: stroke fill;
+}
+
+/* Copied! 툴팁: 빨리 탄력 있게 올라갔다 내려감 */
+@keyframes copy-tooltip {
+  0% {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -8px);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 0);
+    opacity: 0;
+  }
+}
+.copy-tooltip-anim {
+  animation: copy-tooltip 0.75s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
+/* 카테고리 카드 화살표: 1 가운데→대각선 나감, 반쯤 사라질 때 2가 끝에서 나타나 가운데로 */
+@keyframes category-arrow-1 {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(28px, -28px);
+    opacity: 0;
+  }
+}
+@keyframes category-arrow-2 {
+  0% {
+    transform: translate(28px, -28px);
+    opacity: 0;
+  }
+  8% {
+    transform: translate(28px, -28px);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+.category-arrow-1 {
+  animation: category-arrow-1 0.5s ease-out 1 both;
+}
+.category-arrow-2 {
+  animation: category-arrow-2 0.5s ease-out 1 0.25s both;
+}
