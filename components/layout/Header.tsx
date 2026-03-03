@@ -3,6 +3,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { CursorStrokeText } from "@/components/CursorStrokeText";
 
 const BLOG_HREF = process.env.NEXT_PUBLIC_BLOG_URL ?? "/blog";
+const RESUME_HREF = process.env.NEXT_PUBLIC_RESUME_URL ?? "/resume";
 
 export function Header() {
   return (
@@ -10,6 +11,9 @@ export function Header() {
       <nav className="flex flex-col flex-1 items-end text-sm">
         <Link href={BLOG_HREF} className="text-muted-foreground hover:text-foreground">
           Blog
+        </Link>
+        <Link href={RESUME_HREF} className="text-muted-foreground hover:text-foreground">
+          Resume
         </Link>
         <Link href="/projects" className="text-muted-foreground hover:text-foreground">
           Projects
