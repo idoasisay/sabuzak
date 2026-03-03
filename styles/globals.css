@@ -87,6 +87,12 @@
   margin: 0.5em 0;
 }
 
+/* 빈 단락도 한 줄 높이로 보이게 (저장된 <p></p>가 줄바꿈처럼 보이도록) */
+.tiptap-editor p:empty::before {
+  content: " ";
+  white-space: pre;
+}
+
 .tiptap-editor p:first-child {
   margin-top: 0;
 }
