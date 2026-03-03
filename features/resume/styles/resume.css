@@ -1,0 +1,16 @@
+/* Resume 페이지 전용 스타일 (인쇄 포함) */
+
+@media print {
+  .resume-page {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .resume-page a {
+    text-decoration: none;
+  }
+
+  .resume-page a[href^="mailto:"]::after {
+    content: none;
+  }
+}
