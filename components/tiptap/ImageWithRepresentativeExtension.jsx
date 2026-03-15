@@ -10,6 +10,21 @@ export const ImageWithRepresentativeExtension = Image.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
+      width: {
+        default: null,
+        parseHTML: el => {
+          const width = el.getAttribute("data-width") ?? el.getAttribute("width");
+          if (!width) return null;
+          const parsed = Number(width);
+          return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+        },
+        renderHTML: attrs => (attrs.width ? { "data-width": attrs.width, "width": attrs.width } : {}),
+      },
+      height: {
+        default: null,
+        parseHTML: () => null,
+        renderHTML: () => ({}),
+      },
       align: {
         default: null,
         parseHTML: el => el.getAttribute("data-align") || null,
