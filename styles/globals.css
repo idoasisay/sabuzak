@@ -75,6 +75,7 @@
   outline: none;
   box-shadow: none;
   caret-color: hsl(var(--chart-2));
+  overflow-wrap: anywhere;
 }
 
 .tiptap-editor:focus,
@@ -85,6 +86,8 @@
 
 .tiptap-editor p {
   margin: 0.5em 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* 빈 단락도 한 줄 높이로 보이게 (저장된 <p></p>가 줄바꿈처럼 보이도록) */
@@ -117,6 +120,8 @@
 .tiptap-editor ol {
   padding-left: 1.5rem;
   margin: 0.5em 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .tiptap-editor ul {
@@ -131,6 +136,8 @@
   padding-left: 1rem;
   margin: 0.75em 0;
   color: hsl(var(--muted-foreground));
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .tiptap-editor code {
@@ -159,6 +166,8 @@
   color: hsl(var(--primary));
   text-decoration: underline;
   cursor: pointer;
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 .tiptap-editor a:hover {

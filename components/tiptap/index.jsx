@@ -23,6 +23,7 @@ import { uploadImage } from "@/features/blog/actions/uploadImage";
 
 /** 새 글 기본 본문 (빈 문단 여러 개로 최소 높이 확보) */
 const EMPTY_CONTENT = Array(14).fill("<p></p>").join("");
+const EDITOR_CONTENT_WIDTH_CLASS = "mx-auto w-full max-w-[1080px]";
 
 /** @typedef {{ id: string; name: string; slug: string }} CategoryItem */
 /** @typedef {{ id: string; name: string; slug: string }} TagItem */
@@ -205,10 +206,12 @@ export default function TiptapEditor({ categories = [], tags = [], initialPost =
           onImageFileSelect={handleImageFileSelect}
         />
         <div
-          className="min-h-0 flex-1 overflow-y-auto cursor-text outline-none [&_.tiptap-editor]:outline-none [&_.tiptap-editor]:ring-0 [&_.tiptap-editor]:shadow-none"
+          className="min-h-0 flex-1 overflow-y-auto cursor-text bg-border/20 outline-none [&_.tiptap-editor]:outline-none [&_.tiptap-editor]:ring-0 [&_.tiptap-editor]:shadow-none"
           onClick={() => editor?.commands.focus()}
         >
-          <EditorContent editor={editor} />
+          <div className={cn(EDITOR_CONTENT_WIDTH_CLASS, "min-h-full bg-background")}>
+            <EditorContent editor={editor} />
+          </div>
         </div>
 
         <PublishSidebar
