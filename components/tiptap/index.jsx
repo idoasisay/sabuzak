@@ -65,14 +65,26 @@ export default function TiptapEditor({ categories = [], tags = [], initialPost =
 
   const initialPostId = initialPost?.id ?? null;
   useEffect(() => {
+    if (!editor) return;
+
+    let cancelled = false;
+
     if (initialPost) {
       setTitle(initialPost.title);
       setRepresentativeImageUrl(initialPost.thumbnail_url ?? null);
-      if (editor) editor.commands.setContent(initialPost.content, false);
     } else {
       setTitle("");
       setRepresentativeImageUrl(null);
     }
+
+    queueMicrotask(() => {
+      if (cancelled) return;
+      editor.commands.setContent(initialPost?.content ?? EMPTY_CONTENT, false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
     // initialPost identity not in deps: only sync when switching to another post (id) or editor ready
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialPostId, editor]);

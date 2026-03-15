@@ -1,5 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 
+function normalizeSlugValue(slug: string): string {
+  try {
+    return decodeURIComponent(slug).normalize("NFC").trim();
+  } catch {
+    return slug.normalize("NFC").trim();
+  }
+}
+
 export type PostListItem = {
   slug: string;
   title: string;
@@ -66,7 +74,7 @@ export async function getRecentPosts(withinDays = 7): Promise<PostListItem[]> {
 // DESC 상세 페이지용: 상세 페이지에 표시할 데이터만 조회 */
 export async function getPostBySlug(slug: string): Promise<Post | null> {
   const supabase = await createClient();
-  const decodedSlug = decodeURIComponent(slug);
+  const decodedSlug = normalizeSlugValue(slug);
 
   const { data, error } = await supabase
     .from("posts")
@@ -109,12 +117,13 @@ export async function getDraftPosts(): Promise<DraftListItem[]> {
 // DESC 편집 페이지용: slug로 글 조회 (published 무관), category_id·tag_ids 포함 */
 export async function getPostForEdit(slug: string): Promise<PostForEdit | null> {
   const supabase = await createClient();
+  const normalizedSlug = normalizeSlugValue(slug);
   const { data, error } = await supabase
     .from("posts")
     .select(
       "id, slug, title, content, excerpt, created_at, updated_at, category_id, published_at, thumbnail_url, post_tags(tag_id)"
     )
-    .eq("slug", slug)
+    .eq("slug", normalizedSlug)
     .maybeSingle();
 
   if (error || !data) return null;
