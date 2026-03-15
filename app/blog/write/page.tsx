@@ -12,16 +12,25 @@ export default async function BlogWritePage({ searchParams }: BlogWritePageProps
     data: { user },
   } = await supabase.auth.getUser();
   const { slug, returnTo } = await searchParams;
+  const requestedSlug = slug?.trim() ?? null;
 
   if (!user) {
-    return <LoginView slug={slug ?? undefined} returnTo={returnTo ?? undefined} />;
+    return <LoginView slug={requestedSlug ?? undefined} returnTo={returnTo ?? undefined} />;
   }
 
   const [categories, tags, initialPost, drafts] = await Promise.all([
     getCategories(),
     getTags(),
-    slug ? getPostForEdit(slug) : Promise.resolve(null),
+    requestedSlug ? getPostForEdit(requestedSlug) : Promise.resolve(null),
     getDraftPosts(),
   ]);
-  return <BlogWriteView categories={categories} tags={tags} initialPost={initialPost ?? undefined} drafts={drafts} />;
+  return (
+    <BlogWriteView
+      categories={categories}
+      tags={tags}
+      initialPost={initialPost ?? undefined}
+      drafts={drafts}
+      requestedSlug={requestedSlug}
+    />
+  );
 }
