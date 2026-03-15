@@ -30,9 +30,6 @@ const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp
 
 const SEP = <span className="mx-1 h-5 w-px bg-border" aria-hidden />;
 
-const IMAGE_SIZE_SMALL = 240;
-const IMAGE_SIZE_LARGE = 560;
-
 export function Toolbar({ editor, representativeImageUrl, onSetThumbnail, onImageFileSelect }) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
@@ -197,7 +194,7 @@ export function Toolbar({ editor, representativeImageUrl, onSetThumbnail, onImag
           </div>
         )}
       </div>
-      {/* 이미지 선택 시: 대표 이미지로 설정 + 크기 조정 */}
+      {/* 이미지 선택 시: 대표 이미지로 설정 */}
       {editor.isActive("image") && (
         <>
           {SEP}
@@ -223,54 +220,6 @@ export function Toolbar({ editor, representativeImageUrl, onSetThumbnail, onImag
               대표
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => {
-              const { from } = editor.state.selection;
-              editor
-                .chain()
-                .setNodeSelection(from)
-                .focus()
-                .updateAttributes("image", { width: IMAGE_SIZE_SMALL, height: null })
-                .run();
-            }}
-            className={cn(btn, editor.getAttributes("image").width === IMAGE_SIZE_SMALL && active)}
-            title="작게"
-          >
-            작게
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const { from } = editor.state.selection;
-              editor
-                .chain()
-                .setNodeSelection(from)
-                .focus()
-                .updateAttributes("image", { width: null, height: null })
-                .run();
-            }}
-            className={cn(btn, editor.getAttributes("image").width === null && active)}
-            title="보통 (원본)"
-          >
-            보통
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const { from } = editor.state.selection;
-              editor
-                .chain()
-                .setNodeSelection(from)
-                .focus()
-                .updateAttributes("image", { width: IMAGE_SIZE_LARGE, height: null })
-                .run();
-            }}
-            className={cn(btn, editor.getAttributes("image").width === IMAGE_SIZE_LARGE && active)}
-            title="크게"
-          >
-            크게
-          </button>
         </>
       )}
       {SEP}
