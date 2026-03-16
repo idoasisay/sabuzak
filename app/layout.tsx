@@ -38,12 +38,18 @@ const rubikMaps = Rubik_Maps({
   weight: ["400"],
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_URL ? `${process.env.VERCEL_URL}` : `${process.env.NEXT_PUBLIC_LOCAL_SITE_URL}`);
+function getSiteUrl() {
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_LOCAL_SITE_URL ?? process.env.VERCEL_URL;
+
+  if (!envUrl) {
+    return "http://localhost:3000";
+  }
+
+  return envUrl.startsWith("http://") || envUrl.startsWith("https://") ? envUrl : `https://${envUrl}`;
+}
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(getSiteUrl()),
   title: "sabuzak",
   description: "mio의 블로그",
   openGraph: {
