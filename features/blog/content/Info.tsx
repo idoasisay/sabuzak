@@ -62,9 +62,9 @@ function CategoryCard({ title, slug, desc }: { title: string; slug: string; desc
         onMouseLeave={() => setHovered(false)}
       >
         <div className="p-2">
-          <div className="flex gap-2 items-center">
+          <div className="flex min-w-0 items-center gap-2">
             <Folder size={18} className="text-foreground/50 shrink-0" />
-            <p className="font-semibold text-foreground/80 text-sm pb-0.5">{title}</p>
+            <p className="min-w-0 flex-1 truncate pb-0.5 text-sm font-semibold text-foreground/80">{title}</p>
           </div>
           <p className="text-chart-2 text-xs">{desc}</p>
         </div>
