@@ -25,7 +25,7 @@ export function BlogCategoryView({ categoryName, posts }: BlogCategoryViewProps)
           {posts.map(({ slug, title, excerpt, created_at, thumbnail_url, tags }) => (
             <li
               key={slug}
-              className="shrink-0 min-w-62 relative border hover:bg-accent hover:translate-y-[-2px] group transition-all duration-300 ease-out rounded-md"
+              className="shrink-0 min-w-62 h-54 relative border hover:bg-accent hover:translate-y-[-2px] group transition-all duration-300 ease-out rounded-md"
             >
               <div className="absolute right-2 top-3 flex items-center justify-center rounded-full w-4 h-4 bg-chart-2/70 pointer-events-none">
                 <ChevronsLeftRight
@@ -68,6 +68,7 @@ export function BlogCategoryView({ categoryName, posts }: BlogCategoryViewProps)
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                       {tags != null && tags.length > 0 && (
                         <ul className="flex flex-wrap gap-1.5 pt-2" aria-label="태그">
+                          tag:
                           {tags.map(tag => (
                             <li key={tag.id}>
                               <span className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
