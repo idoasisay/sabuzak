@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { INFO_SLUG } from "../constants";
+import { ALL_POSTS_SLUG, INFO_SLUG } from "../constants";
 import {
   SquarePen,
   ChevronsRight,
@@ -16,6 +16,7 @@ import {
   BadgeAlert,
   FileText,
   LogOut,
+  WalletCards,
 } from "lucide-react";
 import { iconButtonClass } from "../styles/uiClasses";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,8 @@ import BlogLink from "./BlogLink";
 
 const SIDEBAR_OPEN = 14; // rem
 const SIDEBAR_CLOSED = 3; // rem
+const SIDEBAR_MIN = 12; // rem
+const SIDEBAR_MAX = 26; // rem
 
 type BlogSidebarProps = {
   categories?: CategoryWithPosts[];
@@ -40,7 +43,7 @@ function getPostSlugFromPathname(pathname: string): string | null {
   const withoutBlog = decodedPath.replace(/^\/blog\/?/, "");
   const segment = (withoutBlog.startsWith("/") ? withoutBlog.slice(1) : withoutBlog).split("/")[0] ?? "";
 
-  if (!segment || segment === INFO_SLUG || segment === "write") return null;
+  if (!segment || segment === INFO_SLUG || segment === ALL_POSTS_SLUG || segment === "write") return null;
 
   // 2. 맥 환경 자모음 분리 방지를 위해 NFC 정규화 적용
   return segment.normalize("NFC");
@@ -50,15 +53,55 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
   const router = useRouter();
   const session = useAuthStore(s => s.session);
   const [open, setOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_OPEN * 16);
+  const [isResizing, setIsResizing] = useState(false);
   const [expandedSlugs, setExpandedSlugs] = useState<Set<string>>(new Set());
   const [collapsedSlugs, setCollapsedSlugs] = useState<Set<string>>(new Set());
   const pathname = usePathname();
+  const resizeStateRef = useRef({ startX: 0, startWidth: SIDEBAR_OPEN * 16 });
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const nextWidth = resizeStateRef.current.startWidth + event.clientX - resizeStateRef.current.startX;
+      const minWidth = SIDEBAR_MIN * 16;
+      const maxWidth = SIDEBAR_MAX * 16;
+      setSidebarWidth(Math.min(Math.max(nextWidth, minWidth), maxWidth));
+    };
+
+    const handlePointerUp = () => {
+      setIsResizing(false);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp, { once: true });
+
+    return () => {
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [isResizing]);
 
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.refresh();
   }
+
+  const handleResizeStart = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!open) return;
+    event.preventDefault();
+    resizeStateRef.current = { startX: event.clientX, startWidth: sidebarWidth };
+    setIsResizing(true);
+  };
+
   const currentPostSlug = getPostSlugFromPathname(pathname);
   const categoryContainingPost = currentPostSlug
     ? categories.find(c => c.posts.some(p => p.slug.normalize("NFC") === currentPostSlug))
@@ -88,15 +131,22 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
 
   const searchParams = useSearchParams();
   const currentCategory = searchParams.get("category"); // URL에서 'category' 값을 읽음
+  const isAllPostsPage = pathname === `/blog/${ALL_POSTS_SLUG}` || pathname === `/${ALL_POSTS_SLUG}`;
+
   return (
     <aside
-      className="flex shrink-0 flex-col overflow-hidden border-r border-border bg-background transition-[width] duration-300 ease-in-out"
-      style={{ width: open ? `${SIDEBAR_OPEN}rem` : `${SIDEBAR_CLOSED}rem` }}
+      className={cn(
+        "relative flex shrink-0 flex-col overflow-hidden bg-background transition-[width,border-color] duration-300 ease-in-out",
+        open ? "border-r border-border" : "border-r border-border",
+        isResizing && "!border-chart-2",
+        isResizing && "transition-none"
+      )}
+      style={{ width: open ? `${sidebarWidth}px` : `${SIDEBAR_CLOSED}rem` }}
     >
       {/* MEMO 헤더: 토글 버튼 + 제목 */}
       <div
         className="flex h-10 shrink-0 items-center border-b border-border bg-accent pr-3 select-none"
-        style={{ minWidth: open ? `${SIDEBAR_OPEN}rem` : undefined }}
+        style={{ minWidth: open ? `${sidebarWidth}px` : undefined }}
       >
         <button
           type="button"
@@ -126,7 +176,7 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
       <div className={cn("min-w-0 flex-1 overflow-hidden bg-accent/30 flex flex-col", open ? "flex" : "")}>
         <nav
           className="flex h-full flex-col gap-0.5 overflow-y-auto text-sm text-muted-foreground"
-          style={{ minWidth: open ? `${SIDEBAR_OPEN}rem` : undefined }}
+          style={{ minWidth: open ? `${sidebarWidth}px` : undefined }}
         >
           {!open && (
             <div className="flex flex-col items-center justify-center p-2 gap-2">
@@ -155,7 +205,7 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
                   ? "bg-accent text-foreground"
                   : "text-muted-foreground"
               )}
-              style={{ width: `${SIDEBAR_OPEN}rem` }}
+              style={{ width: open ? `${sidebarWidth}px` : undefined }}
             >
               <BadgeAlert size={16} className="shrink-0 ml-1" />
               <p className="truncate">시작하는 글</p>
@@ -164,7 +214,7 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
               href="/"
               target="_blank"
               className="flex items-center gap-2 p-2 hover:text-foreground transition-colors duration-200 text-muted-foreground"
-              style={{ width: `${SIDEBAR_OPEN}rem` }}
+              style={{ width: open ? `${sidebarWidth}px` : undefined }}
             >
               <AtSign size={16} className="shrink-0 ml-1" />
               <p className="truncate">Resume</p>
@@ -172,6 +222,18 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
           </div>
 
           <div className={cn("p-2 pt-3", open ? "" : "hidden")}>
+            <div className="mb-3">
+              <BlogLink
+                href={`/blog/${ALL_POSTS_SLUG}`}
+                className={cn(
+                  "flex min-w-0 items-center gap-2 rounded-md p-1 text-xs hover:text-foreground transition-colors duration-200",
+                  isAllPostsPage ? "bg-accent font-medium text-foreground" : "text-muted-foreground"
+                )}
+              >
+                <WalletCards size={16} className="shrink-0 text-muted-foreground/70" />
+                <span className="truncate">전체 보기</span>
+              </BlogLink>
+            </div>
             <p className="mb-1 block text-xs font-medium text-muted-foreground/80">카테고리</p>
             {categories.length > 0 && (
               <>
@@ -220,14 +282,14 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
                               <BlogLink
                                 href={`/blog/${encodeURIComponent(postSlug)}`}
                                 className={cn(
-                                  "truncate text-xs hover:text-foreground flex items-center gap-2 p-1 px-3 rounded-md",
+                                  "flex min-w-0 items-center gap-2 rounded-md p-1 px-3 text-xs hover:text-foreground",
                                   currentPostSlug === postSlug.normalize("NFC")
                                     ? "font-medium text-foreground bg-accent"
                                     : "text-muted-foreground"
                                 )}
                               >
-                                <CornerDownRight className="size-3" />
-                                {title}
+                                <CornerDownRight className="size-3 shrink-0" />
+                                <span className="min-w-0 flex-1 truncate">{title}</span>
                               </BlogLink>
                             </li>
                           ))}
@@ -250,12 +312,12 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
                       key={slug}
                       href={`/blog/${slug}`}
                       className={cn(
-                        "truncate text-xs p-1 hover:text-foreground flex items-center gap-2",
+                        "flex min-w-0 items-center gap-2 p-1 text-xs hover:text-foreground",
                         currentPostSlug === slug && "font-medium text-foreground"
                       )}
                     >
-                      <FileText size={16} className="text-muted-foreground/70" />
-                      {title}
+                      <FileText size={16} className="shrink-0 text-muted-foreground/70" />
+                      <span className="min-w-0 flex-1 truncate">{title}</span>
                     </BlogLink>
                   ))}
                 </div>
@@ -272,6 +334,15 @@ export function BlogSidebar({ categories = [], posts = [] }: BlogSidebarProps) {
           <ThemeToggle />
         </div>
       </div>
+      {open && (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="사이드바 너비 조절"
+          className="absolute inset-y-0 -right-1 z-10 w-3 cursor-col-resize select-none touch-none group hover:border-r hover:border-chart-2"
+          onPointerDown={handleResizeStart}
+        />
+      )}
     </aside>
   );
 }
