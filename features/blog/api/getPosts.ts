@@ -39,6 +39,14 @@ export type PostForEdit = Post & {
   published_at: string | null;
 };
 
+export type PaginatedPostsResult = {
+  posts: PostListItem[];
+  totalCount: number;
+  totalPages: number;
+  page: number;
+  pageSize: number;
+};
+
 // DESC: 목록 카드용: 목록 카드에 표시할 데이터만 조회 */
 export async function getPostsList(): Promise<PostListItem[]> {
   const supabase = await createClient();
@@ -69,6 +77,45 @@ export async function getRecentPosts(withinDays = 7): Promise<PostListItem[]> {
 
   if (error) return [];
   return (data ?? []) as PostListItem[];
+}
+
+export async function getPublishedPostsPage(page = 1, pageSize = 12): Promise<PaginatedPostsResult> {
+  const supabase = await createClient();
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  const from = (safePage - 1) * safePageSize;
+  const to = from + safePageSize - 1;
+
+  const { data, error, count } = await supabase
+    .from("posts")
+    .select("slug, title, excerpt, created_at, thumbnail_url, post_tags(tag_id, tags(id, name, slug))", {
+      count: "exact",
+    })
+    .eq("published", true)
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    return { posts: [], totalCount: 0, totalPages: 0, page: safePage, pageSize: safePageSize };
+  }
+
+  const rows = (data ?? []) as Record<string, unknown>[];
+  const posts = rows.map(row => {
+    const postTags = (row.post_tags as { tag_id: string; tags: PostTag | null }[] | null) ?? [];
+    const tags = postTags.map(pt => pt.tags).filter((t): t is PostTag => t != null);
+    const { post_tags: _drop, ...post } = row;
+    void _drop;
+    return { ...post, tags } as PostListItem;
+  });
+
+  const totalCount = count ?? 0;
+  return {
+    posts,
+    totalCount,
+    totalPages: Math.ceil(totalCount / safePageSize),
+    page: safePage,
+    pageSize: safePageSize,
+  };
 }
 
 // DESC 상세 페이지용: 상세 페이지에 표시할 데이터만 조회 */
